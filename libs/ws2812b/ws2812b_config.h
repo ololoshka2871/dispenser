@@ -40,7 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 //Период следования бит в тиках таймера
 //должно быть 1.25мкс
-#define WS2812B_TIMER_AAR 119 // 0x0059
+#define WS2812B_TIMER_AAR 59
 
 //Передача лог. нуля 0.4мкс
 #define WS2812B_0_VAL (WS2812B_TIMER_AAR / 3)

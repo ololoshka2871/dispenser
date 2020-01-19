@@ -7,6 +7,8 @@ set(SOURCE_FILES
     hardfault.cpp
     systick.c
     LedController.cpp
+
+    Button.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})

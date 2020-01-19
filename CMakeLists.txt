@@ -24,6 +24,7 @@ add_compile_options(
     -ffreestanding
     -fno-move-loop-invariants
     -Os -g3
+    -fno-use-cxa-atexit
 )
 
 add_compile_options($<$<COMPILE_LANGUAGE:C>:-std=gnu11>)
@@ -39,6 +40,7 @@ add_link_options(
 
 add_definitions(
     -DF_CPU=48000000L
+    -DHSE_VALUE=16000000L
     -D${MCU}
     -DWS2812B_NUM_LEDS=1
 )

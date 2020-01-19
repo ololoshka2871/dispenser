@@ -13,6 +13,8 @@ static bool state;
 
 static uint32_t blinkCounter;
 
+static uint32_t prev_tick_counter = 0;
+
 static void set_color() {
   ws2812b_set(0, _color >> 16, _color >> 8, _color);
   ws2812b_send();
@@ -74,11 +76,9 @@ void LedController::process() {
     return;
   }
 
-  static uint32_t prev_tich_counter = 0;
-
   auto curent_tick = HAL_GetTick();
-  if (prev_tich_counter < curent_tick) {
-    prev_tich_counter = curent_tick;
+  if (prev_tick_counter != curent_tick) {
+    prev_tick_counter = curent_tick;
 
     if (blinkCounter > 0) {
       --blinkCounter;

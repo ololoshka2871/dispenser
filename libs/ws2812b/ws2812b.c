@@ -134,6 +134,8 @@ void ws2812b_init(void)
   //Разрешаем обработку прерываний
   NVIC_EnableIRQ(TIM2_IRQn); //от таймера
   NVIC_EnableIRQ(DMA1_Channelx_IRQn); //от DMA
+  NVIC_SetPriority(TIM2_IRQn, 10);
+  NVIC_SetPriority(DMA1_Channelx_IRQn, 3);
   
   ws2812b_buff_claer();
   bus_retcode(); //сбрасываем шину

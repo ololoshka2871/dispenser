@@ -110,7 +110,7 @@ void Configure_AHB_Clocks() {
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
 
   RCC_ClkInitStruct.APB1CLKDivider =
-      F_CPU > 24000000U ? RCC_HCLK_DIV2 : RCC_HCLK_DIV1;
+      F_CPU > 36000000U ? RCC_HCLK_DIV2 : RCC_HCLK_DIV1;
   auto latency = F_CPU < 24000000U ? FLASH_LATENCY_0 : FLASH_LATENCY_1;
   HAL_RCC_ClockConfig(&RCC_ClkInitStruct, latency);
 }
