@@ -74,7 +74,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DATA_LEN ((WS2812B_NUM_LEDS * 24) + 2)
 
 static uint8_t led_array[DATA_LEN];
-static int flag_rdy = 0;
+static volatile int flag_rdy = 0;
 
 static void bus_retcode(void);
 
@@ -234,6 +234,11 @@ int ws2812b_send(void)
 int ws2812b_is_ready(void)
 {
   return flag_rdy;
+}
+
+int ws2812b_wait_ready(void)
+{
+  while(!flag_rdy);
 }
 
 static void bus_retcode(void)

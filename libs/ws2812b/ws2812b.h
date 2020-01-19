@@ -72,6 +72,9 @@ int ws2812b_send(void);
 //завершена успешно
 int ws2812b_is_ready(void);
 
+//Ждать завершения передачи
+int ws2812b_wait_ready(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -49,7 +49,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define WS2812B_1_VAL ((WS2812B_TIMER_AAR / 3) * 2)
 
 //Сигнал RET или RESET более 50мкс
-#define WS2812B_TIMER_RET (WS2812B_TIMER_AAR * 45)
+#define WS2812B_TIMER_RET (WS2812B_TIMER_AAR * 210) // 45
 
 //убрать коментарий, если нужно инвертировать
 //выходной сигнал
