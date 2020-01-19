@@ -1,113 +1,86 @@
-project(STM32_HAL)
+cmake_minimum_required(VERSION 3.13)
 
-set(SOURCES
-    config/stm32f0xx_hal_conf.h
+SET(STM32_DRIVERS_BASE        ${STM32CubeF0}/Drivers)
+SET(HAL_BASE                  ${STM32_DRIVERS_BASE}/${STM32_FAMILY_LONG}xx_HAL_Driver)
+SET(HAL_BASE_SRC_DIR          ${HAL_BASE}/Src)
+SET(CMSIS_BASE                ${STM32_DRIVERS_BASE}/CMSIS)
 
-    src/stm32f0xx/stm32f0xx_hal.c
-    src/stm32f0xx/stm32f0xx_hal_can.c
-    src/stm32f0xx/stm32f0xx_hal_cortex.c
-    src/stm32f0xx/stm32f0xx_hal_dma.c
-    src/stm32f0xx/stm32f0xx_hal_flash.c
-    src/stm32f0xx/stm32f0xx_hal_flash_ex.c
-    src/stm32f0xx/stm32f0xx_hal_gpio.c
-    src/stm32f0xx/stm32f0xx_hal_i2c.c
-    src/stm32f0xx/stm32f0xx_hal_i2c_ex.c
-    src/stm32f0xx/stm32f0xx_hal_pcd.c
-    src/stm32f0xx/stm32f0xx_hal_pcd_ex.c
-    src/stm32f0xx/stm32f0xx_hal_pwr.c
-    src/stm32f0xx/stm32f0xx_hal_pwr_ex.c
-    src/stm32f0xx/stm32f0xx_hal_rcc.c
-    src/stm32f0xx/stm32f0xx_hal_rcc_ex.c
-    src/stm32f0xx/stm32f0xx_hal_tim.c
-    src/stm32f0xx/stm32f0xx_hal_tim_ex.c
+SET(HAL_SRC
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_adc.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_adc_ex.c
+    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_can.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_cec.c
+    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_cortex.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_crc.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_dac.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_dac_ex.c
+    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_dma.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_eth.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_flash.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_flash_ex.c
+    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_gpio.c   
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_hcd.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_i2c.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_i2s.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_irda.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_iwdg.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_mmc.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_msp_template.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_nand.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_nor.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_pccard.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_pcd.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_pcd_ex.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_pwr.c
+    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_rcc.c
+    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_rcc_ex.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_rtc.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_rtc_ex.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_sd.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_smartcard.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_spi.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_spi_ex.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_sram.c
+    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_tim.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_timebase_rtc_alarm_template.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_timebase_tim_template.c
+    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_tim_ex.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_uart.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_usart.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_hal_wwdg.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_ll_adc.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_ll_crc.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_ll_dac.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_ll_dma.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_ll_exti.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_ll_fsmc.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_ll_gpio.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_ll_i2c.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_ll_pwr.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_ll_rcc.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_ll_rtc.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_ll_sdmmc.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_ll_spi.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_ll_tim.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_ll_usart.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_ll_usb.c
+#    ${HAL_BASE_SRC_DIR}/${STM32_FAMILY_LONG_lx}_ll_utils.c
 
-    src/newlib/assert.c
-    src/newlib/_exit.c
-    src/newlib/_sbrk.c
-    src/newlib/_startup.c
-    src/newlib/_syscalls.c
+    ${CMSIS_BASE}/Device/ST/${STM32_FAMILY_LONG}xx/Source/Templates/gcc/startup_${STM32_FAMILY_Xl}.s
 
-    src/cortexm/exception_handlers.c
-    src/cortexm/_initialize_hardware.c
-    src/cortexm/_reset_hardware.c
-
-    src/cmsis/system_stm32f0xx.c
-
-    include/stm32f0xx/stm32f0xx_hal_tim.h
-    include/stm32f0xx/stm32f0xx_hal_pcd.h
-    include/stm32f0xx/stm32f0xx_hal_gpio.h
-    include/stm32f0xx/stm32f0xx_hal_i2c_ex.h
-    include/stm32f0xx/stm32f0xx_hal_flash_ex.h
-    include/stm32f0xx/stm32f0xx_hal_dma_ex.h
-    include/stm32f0xx/stm32f0xx_hal_i2c.h
-    include/stm32f0xx/stm32f0xx_hal_pwr.h
-    include/stm32f0xx/stm32f0xx_hal_pwr_ex.h
-    include/stm32f0xx/stm32f0xx_hal_dma.h
-    include/stm32f0xx/stm32f0xx_hal_gpio_ex.h
-    include/stm32f0xx/Legacy/stm32_hal_legacy.h
-    include/stm32f0xx/stm32f0xx_hal_rcc_ex.h
-    include/stm32f0xx/stm32f0xx_hal_def.h
-    include/stm32f0xx/stm32f0xx_hal.h
-    include/stm32f0xx/stm32f0xx_hal_rcc.h
-    include/stm32f0xx/stm32f0xx_hal_cortex.h
-    include/stm32f0xx/stm32f0xx_hal_flash.h
-    include/stm32f0xx/stm32f0xx_hal_tim_ex.h
-    include/stm32f0xx/stm32f0xx_hal_pcd_ex.h
-    include/stm32f0xx/stm32f0xx_hal_can.h
-    include/cmsis/cmsis_armcc.h
-    include/cmsis/arm_math.h
-    include/cmsis/cmsis_armcc_V6.h
-    include/cmsis/arm_common_tables.h
-    include/cmsis/core_cm3.h
-    include/cmsis/core_cm0plus.h
-    include/cmsis/core_cm7.h
-    include/cmsis/cmsis_gcc.h
-    include/cmsis/core_cmInstr.h
-    include/cmsis/core_cmFunc.h
-    include/cmsis/core_cm0.h
-    include/cmsis/arm_const_structs.h
-    include/cmsis/core_sc300.h
-    include/cmsis/device/stm32f031x6.h
-    include/cmsis/device/stm32f048xx.h
-    include/cmsis/device/stm32f042x6.h
-    include/cmsis/device/stm32f091xc.h
-    include/cmsis/device/stm32f0xx.h
-    include/cmsis/device/stm32f030x6.h
-    include/cmsis/device/stm32f030x8.h
-    include/cmsis/device/stm32f078xx.h
-    include/cmsis/device/system_stm32f0xx.h
-    include/cmsis/device/stm32f038xx.h
-    include/cmsis/device/stm32f058xx.h
-    include/cmsis/device/stm32f070xb.h
-    include/cmsis/device/stm32f098xx.h
-    include/cmsis/device/stm32f070x6.h
-    include/cmsis/device/stm32f071xb.h
-    include/cmsis/device/stm32f030xc.h
-    include/cmsis/device/stm32f051x8.h
-    include/cmsis/device/stm32f072xb.h
-    include/cmsis/cmsis_device.h
-    include/cmsis/core_cm4.h
-    include/cmsis/core_sc000.h
-    include/cmsis/core_cmSimd.h
-    include/arm/semihosting.h
-    include/cortexm/ExceptionHandlers.h
-    include/diag/Trace.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/system_${STM32_FAMILY_LONG_lx}.c
 )
 
-set(INCLUDE_DIRS
-    include/
-    include/cmsis
-    include/stm32f0xx
-    include/cmsis/device
-    config/
+ADD_LIBRARY(STM32_HAL_STM32F042x6 STATIC ${HAL_SRC})
+target_include_directories(STM32_HAL_STM32F042x6 PUBLIC
+    ${HAL_BASE}/Inc
+    ${CMSIS_BASE}/Include
+    ${CMSIS_BASE}/Device/ST/${STM32_FAMILY_LONG}xx/Include
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+)
+target_compile_definitions(STM32_HAL_STM32F042x6 PUBLIC
+    -DHAL_TIM_MODULE_ENABLED
 )
 
-add_library(STM32_HAL_STM32F042x6 OBJECT ${SOURCES} src/cmsis/startup_stm32f042x6.S)
-    target_include_directories(STM32_HAL_STM32F042x6 PUBLIC ${INCLUDE_DIRS})
-    target_compile_options(STM32_HAL_STM32F042x6 PRIVATE -Wno-unused-parameter -Wno-deprecated)
-    target_compile_definitions(STM32_HAL_STM32F042x6 PUBLIC STM32F042x6)
-
-#add_library(STM32_HAL_STM32F072xB OBJECT ${SOURCES} src/cmsis/startup_stm32f072xb.S)
-#    target_include_directories(STM32_HAL_STM32F072xB PUBLIC ${INCLUDE_DIRS})
-#    target_compile_options(STM32_HAL_STM32F072xB PRIVATE -Wno-unused-parameter -Wno-deprecated)
-#    target_compile_definitions(STM32_HAL_STM32F072xB PUBLIC STM32F072xB)

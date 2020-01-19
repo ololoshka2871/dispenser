@@ -1,15 +1,23 @@
 cmake_minimum_required(VERSION 3.13)
 
 set(SOURCE_FILES
-        main.cpp
-        BoardInit.cpp
+    main.cpp
+    BoardInit.cpp
+    _init.c
+    hardfault.cpp
+    systick.c
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
-target_include_directories(${PROJECT_NAME} PRIVATE include)
-target_compile_definitions(${PROJECT_NAME} PRIVATE BOARD=BOARD_${TGTNAME})
-target_link_libraries(${PROJECT_NAME} STM32_HAL_STM32F042x6)
+#target_include_directories(${PROJECT_NAME} PRIVATE include)
+#target_compile_definitions(${PROJECT_NAME} PRIVATE BOARD=BOARD_${TGTNAME})
+target_link_libraries(${PROJECT_NAME} PUBLIC
+    -Wl,--whole-archive
+        STM32_HAL_STM32F042x6
+    -Wl,--no-whole-archive
+    ws2812b
+)
 
 ####### some helpers to generate targets
 function(make_bin_file target)
