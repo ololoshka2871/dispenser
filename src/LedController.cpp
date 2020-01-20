@@ -66,13 +66,14 @@ void LedController::setColor(uint8_t r, uint8_t g, uint8_t b) {
   }
 }
 
-void LedController::setBlink(enum blinkMode blink) {
-  _blink = blink;
-  state = true;
-}
+void LedController::setBlink(enum blinkMode blink) { _blink = blink; }
 
 void LedController::process() {
   if (_blink == BLINK_NO) {
+    if (!state) {
+      state = true;
+      set_color();
+    }
     return;
   }
 

@@ -13,7 +13,7 @@ enum callback_type {
   BTN_ON_RELEASE = 1,
   BTN_ON_CLICK = 2,
   BTN_ON_LONG_PUSH = 3,
-  COUNT = 4
+  BTN_CB_COUNT = 4
 };
 
 template <typename Tid> struct Button {
@@ -90,6 +90,13 @@ template <typename Tid> struct Button {
 
   callback_t &operator[](const callback_type cbt) { return callbacks[cbt]; }
 
+  this_type &reset_callbacks() {
+    for (int cb = BTN_ON_PUSH; cb < BTN_CB_COUNT; ++cb) {
+      callbacks[cb] = nullptr;
+    }
+    return *this;
+  }
+
 private:
   Tid id;
   GPIO_TypeDef *GPIO;
@@ -99,7 +106,7 @@ private:
   uint32_t long_push_counter;
   state mystate;
 
-  callback_t callbacks[COUNT];
+  callback_t callbacks[BTN_CB_COUNT];
 };
 
 #endif /* _BUTTON_H_ */

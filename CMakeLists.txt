@@ -24,12 +24,14 @@ add_compile_options(
     -ffreestanding
     -fno-move-loop-invariants
     -Os -g3
-    -fno-use-cxa-atexit
 )
 
 add_compile_options($<$<COMPILE_LANGUAGE:C>:-std=gnu11>)
 
-add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-std=c++14>)
+add_compile_options(
+    $<$<COMPILE_LANGUAGE:CXX>:-std=c++14>
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-use-cxa-atexit>
+)
 
 add_link_options(
     -mcpu=cortex-m0 -mthumb -O
