@@ -21,6 +21,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         STM32_HAL_STM32F042x6
     -Wl,--no-whole-archive
     ws2812b
+    AccelStepperHAL
 )
 
 ####### some helpers to generate targets
