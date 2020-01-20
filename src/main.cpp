@@ -5,14 +5,22 @@
 
 #include "BoardInit.h"
 
+// ManualDriver manualDriver;
+// PWMDriver pwmDriver;
+// StepDirDriver stepdirDriver;
+
+// DriverSelector selector{manualDriver, pwmDriver, stepdirDriver};
+
 extern "C" int main(void) {
   InitBoard();
 
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
-  AccelStepper stepper{AccelStepper::HALF4WIRE, DigitalOut{GPIOB, GPIO_PIN_7},
-                       DigitalOut{GPIOB, GPIO_PIN_6},
+  // Инициализируемся с последовательностью выводов IN1-IN3-IN2-IN4
+  // для использования AccelStepper с 28BYJ-48
+  AccelStepper stepper{AccelStepper::FULL4WIRE, DigitalOut{GPIOB, GPIO_PIN_7},
                        DigitalOut{GPIOB, GPIO_PIN_5},
+                       DigitalOut{GPIOB, GPIO_PIN_6},
                        DigitalOut{GPIOB, GPIO_PIN_4}};
 
   stepper.setSpeed(1000);

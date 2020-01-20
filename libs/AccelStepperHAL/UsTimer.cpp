@@ -17,9 +17,10 @@ static TIM_HandleTypeDef tim14{
         TIM_AUTORELOAD_PRELOAD_DISABLE // AutoReloadPreload
     }};
 
-extern "C" void TIM14_IRQHandler() { HAL_TIM_IRQHandler(&tim14); }
-
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) { ++extender; }
+extern "C" void TIM14_IRQHandler() {
+  __HAL_TIM_CLEAR_IT(&tim14, TIM_IT_UPDATE);
+  ++extender;
+}
 
 UsTimer &UsTimer::Instance() {
   if (!inst) {
@@ -38,4 +39,7 @@ UsTimer::UsTimer() {
 
   HAL_TIM_Base_Init(&tim14);
   HAL_TIM_Base_Start_IT(&tim14);
+
+  NVIC_SetPriority(TIM14_IRQn, 8);
+  NVIC_EnableIRQ(TIM14_IRQn);
 }
