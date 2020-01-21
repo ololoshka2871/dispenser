@@ -26,9 +26,10 @@ extern "C" int main(void) {
 
   ManualDriver manualDriver{stepper, 500};
   PWMDriver pwmDriver{stepper};
-  StepDirDriver stepdirDriver{stepper};
+  StepDirDriver::begin(stepper, false);
 
-  StepDriverSelector selector{&manualDriver, &pwmDriver, &stepdirDriver};
+  StepDriverSelector selector{&manualDriver, &pwmDriver,
+                              &StepDirDriver::instance()};
 
   UI ui{selector, manualDriver};
 

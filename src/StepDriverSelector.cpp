@@ -38,11 +38,6 @@ void StepDriverSelector::apply_selection() {
 }
 
 void StepDriverSelector::doDisableAll() {
-  /*
-std::for_each(drivers.begin(), drivers.end(),
-              [](auto d) { d->setEnabled(false); });
-              */
-  for (auto it = drivers.begin(); it != drivers.end(); ++it) {
-    (*it)->setEnabled(false);
-  }
+  std::for_each(drivers.begin(), drivers.end(),
+                [](auto d) { d->setEnabled(false); });
 }
