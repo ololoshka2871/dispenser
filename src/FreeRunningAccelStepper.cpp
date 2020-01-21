@@ -22,9 +22,19 @@ void FreeRunningAccelStepper::stop() {
   AccelStepper::stop();
 }
 
+void FreeRunningAccelStepper::stopHard() {
+  free_run = false;
+
+  _stepInterval = 0;
+  _speed = 0.0;
+  _n = 0;
+}
+
 void FreeRunningAccelStepper::run() {
   auto running = AccelStepper::run();
   if (running && free_run) {
     _targetPos = _currentPos + stepsToStop;
   }
 }
+
+float FreeRunningAccelStepper::getAcceleration() const { return _acceleration; }

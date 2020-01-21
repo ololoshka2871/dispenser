@@ -2,8 +2,20 @@
 
 #include "ManualDriver.h"
 
-ManualDriver::ManualDriver(FreeRunningAccelStepper &_stepper)
-    : AbstractStepDriver{_stepper} {}
+ManualDriver::ManualDriver(FreeRunningAccelStepper &_stepper,
+                           float acceleration)
+    : AbstractStepDriver{_stepper}, acceleration(acceleration),
+      _saveAcceleration(acceleration) {}
+
+AbstractStepDriver &ManualDriver::setEnabled(bool enable) {
+  if (enable) {
+    _saveAcceleration = stepper.getAcceleration();
+    stepper.setAcceleration(acceleration);
+  } else {
+    stepper.setAcceleration(_saveAcceleration);
+  }
+  return AbstractStepDriver::setEnabled(enable);
+}
 
 void ManualDriver::move(FreeRunningAccelStepper::Direction dir) {
   if (enabled) {
@@ -13,6 +25,6 @@ void ManualDriver::move(FreeRunningAccelStepper::Direction dir) {
 
 void ManualDriver::stop() {
   if (enabled) {
-    stepper.stop();
+    stepper.stopHard();
   }
 }

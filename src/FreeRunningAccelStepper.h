@@ -11,7 +11,10 @@ struct FreeRunningAccelStepper : public AccelStepper {
 
   void moveFree(Direction dir);
   void stop();
+  void stopHard();
   void run();
+
+  float getAcceleration() const;
 
 private:
   long stepsToStop;

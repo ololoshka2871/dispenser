@@ -5,8 +5,9 @@ struct FreeRunningAccelStepper;
 
 struct AbstractStepDriver {
   AbstractStepDriver(FreeRunningAccelStepper &stepper);
+  virtual ~AbstractStepDriver() = default;
 
-  AbstractStepDriver &setEnabled(bool enable);
+  virtual AbstractStepDriver &setEnabled(bool enable);
 
 protected:
   FreeRunningAccelStepper &stepper;

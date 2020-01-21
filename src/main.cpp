@@ -22,7 +22,7 @@ extern "C" int main(void) {
   stepper.setMaxSpeed(1000);
   stepper.setAcceleration(3000);
 
-  ManualDriver manualDriver{stepper};
+  ManualDriver manualDriver{stepper, 500};
   // PWMDriver pwmDriver;
   // StepDirDriver stepdirDriver;
 
