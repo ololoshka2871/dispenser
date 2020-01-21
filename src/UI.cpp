@@ -89,7 +89,7 @@ void UI::apply_state(State newstate) {
                           : FreeRunningAccelStepper::Direction::DIRECTION_CCW);
   };
 
-  const auto stop_moving = [this](ButtonID btn) {
+  const auto stop_moving = [this](ButtonID) {
     LedController::setBlink(LedController::BLINK_NO);
     LedController::setColor(LedController::Green);
     manualDriver.stop();

@@ -31,7 +31,10 @@ struct DigitalOut {
 
   /// A shorthand for write() using the assignment operator which copies the
   /// state from the DigitalOut argument. More...
-  DigitalOut &operator=(DigitalOut &rhs) { write(rhs.read()); }
+  DigitalOut &operator=(DigitalOut &rhs) {
+    write(rhs.read());
+    return *this;
+  }
 
   /// A shorthand for read() More...
   operator int() { return read(); }

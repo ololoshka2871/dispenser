@@ -1,5 +1,7 @@
 #include <memory>
 
+#include <UsTimer.h>
+
 #include "FreeRunningAccelStepper.h"
 
 FreeRunningAccelStepper::FreeRunningAccelStepper(uint8_t interface,
@@ -38,3 +40,16 @@ void FreeRunningAccelStepper::run() {
 }
 
 float FreeRunningAccelStepper::getAcceleration() const { return _acceleration; }
+
+void FreeRunningAccelStepper::doStep(Direction dir) {
+  if (_direction == DIRECTION_CW) {
+    // Clockwise
+    _currentPos += 1;
+  } else {
+    // Anticlockwise
+    _currentPos -= 1;
+  }
+  step(_currentPos);
+
+  _lastStepTime = UsTimer::Instance().read_us();
+}
