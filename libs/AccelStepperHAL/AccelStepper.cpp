@@ -507,12 +507,13 @@ void AccelStepper::enableOutputs() {
 
   // pinMode(_pin[0], OUTPUT);
   // pinMode(_pin[1], OUTPUT);
-  if (_interface == FULL4WIRE || _interface == HALF4WIRE) {
-    // pinMode(_pin[2], OUTPUT);
-    // pinMode(_pin[3], OUTPUT);
-  } else if (_interface == FULL3WIRE || _interface == HALF3WIRE) {
-    // pinMode(_pin[2], OUTPUT);
-  }
+  // if (_interface == FULL4WIRE || _interface == HALF4WIRE) {
+  // pinMode(_pin[2], OUTPUT);
+  // pinMode(_pin[3], OUTPUT);
+  //} else if (_interface == FULL3WIRE || _interface == HALF3WIRE) {
+  // pinMode(_pin[2], OUTPUT);
+  //}
+  step(_currentPos);
 
   // if (_enablePin != 0xff)
   if (_enablePin.is_connected()) {

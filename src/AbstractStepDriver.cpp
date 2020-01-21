@@ -1,3 +1,5 @@
+#include "FreeRunningAccelStepper.h"
+
 #include "AbstractStepDriver.h"
 
 AbstractStepDriver::AbstractStepDriver(FreeRunningAccelStepper &stepper)
@@ -5,5 +7,10 @@ AbstractStepDriver::AbstractStepDriver(FreeRunningAccelStepper &stepper)
 
 AbstractStepDriver &AbstractStepDriver::setEnabled(bool enable) {
   this->enabled = enable;
+  if (enable) {
+    stepper.enableOutputs();
+  } else {
+    stepper.disableOutputs();
+  }
   return *this;
 }
