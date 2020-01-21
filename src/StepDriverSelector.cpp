@@ -1,9 +1,10 @@
 #include <algorithm>
-#include <cassert>
 
 #include "AbstractStepDriver.h"
 
 #include "StepDriverSelector.h"
+
+#define assert(x) __asm__("BKPT")
 
 StepDriverSelector::StepDriverSelector(
     std::initializer_list<AbstractStepDriver *> drivers)
