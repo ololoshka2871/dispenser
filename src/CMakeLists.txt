@@ -15,6 +15,10 @@ set(SOURCE_FILES
     AbstractStepDriver.h
     ManualDriver.cpp
     ManualDriver.h
+    PWMDriver.cpp
+    PWMDriver.h
+    StepDirDriver.cpp
+    StepDirDriver.h
 
     StepDriverSelector.h
     StepDriverSelector.cpp

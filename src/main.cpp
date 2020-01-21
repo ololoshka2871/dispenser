@@ -2,6 +2,8 @@
 
 #include "FreeRunningAccelStepper.h"
 #include "ManualDriver.h"
+#include "PWMDriver.h"
+#include "StepDirDriver.h"
 #include "StepDriverSelector.h"
 #include "UI.h"
 
@@ -23,10 +25,10 @@ extern "C" int main(void) {
   stepper.setAcceleration(3000);
 
   ManualDriver manualDriver{stepper, 500};
-  // PWMDriver pwmDriver;
-  // StepDirDriver stepdirDriver;
+  PWMDriver pwmDriver{stepper};
+  StepDirDriver stepdirDriver{stepper};
 
-  StepDriverSelector selector{&manualDriver /*, &pwmDriver, &stepdirDriver*/};
+  StepDriverSelector selector{&manualDriver, &pwmDriver, &stepdirDriver};
 
   UI ui{selector, manualDriver};
 
