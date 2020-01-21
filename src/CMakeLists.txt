@@ -10,6 +10,17 @@ set(SOURCE_FILES
     UI.cpp
 
     Button.h
+
+    AbstractStepDriver.cpp
+    AbstractStepDriver.h
+    ManualDriver.cpp
+    ManualDriver.h
+
+    StepDriverSelector.h
+    StepDriverSelector.cpp
+
+    FreeRunningAccelStepper.cpp
+    FreeRunningAccelStepper.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})

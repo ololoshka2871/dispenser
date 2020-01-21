@@ -1,15 +1,11 @@
-#include <AccelStepper.h>
 #include <stm32f0xx_hal.h>
 
+#include "FreeRunningAccelStepper.h"
+#include "ManualDriver.h"
+#include "StepDriverSelector.h"
 #include "UI.h"
 
 #include "BoardInit.h"
-
-// ManualDriver manualDriver;
-// PWMDriver pwmDriver;
-// StepDirDriver stepdirDriver;
-
-// DriverSelector selector{manualDriver, pwmDriver, stepdirDriver};
 
 extern "C" int main(void) {
   InitBoard();
@@ -18,17 +14,21 @@ extern "C" int main(void) {
 
   // Инициализируемся с последовательностью выводов IN1-IN3-IN2-IN4
   // для использования AccelStepper с 28BYJ-48
-  AccelStepper stepper{AccelStepper::FULL4WIRE, DigitalOut{GPIOB, GPIO_PIN_7},
-                       DigitalOut{GPIOB, GPIO_PIN_5},
-                       DigitalOut{GPIOB, GPIO_PIN_6},
-                       DigitalOut{GPIOB, GPIO_PIN_4}};
+  FreeRunningAccelStepper stepper{
+      AccelStepper::FULL4WIRE, DigitalOut{GPIOB, GPIO_PIN_7},
+      DigitalOut{GPIOB, GPIO_PIN_5}, DigitalOut{GPIOB, GPIO_PIN_6},
+      DigitalOut{GPIOB, GPIO_PIN_4}};
 
-  stepper.setSpeed(1000);
-  stepper.setAcceleration(5000);
+  stepper.setMaxSpeed(1000);
+  stepper.setAcceleration(3000);
 
-  UI ui;
+  ManualDriver manualDriver{stepper};
+  // PWMDriver pwmDriver;
+  // StepDirDriver stepdirDriver;
 
-  stepper.moveTo(500);
+  StepDriverSelector selector{&manualDriver /*, &pwmDriver, &stepdirDriver*/};
+
+  UI ui{selector, manualDriver};
 
   for (;;) {
     ui.process();

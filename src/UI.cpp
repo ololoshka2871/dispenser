@@ -1,14 +1,18 @@
 #include <cassert>
 #include <map>
 
+#include "ManualDriver.h"
+#include "StepDriverSelector.h"
+
 #include "LedController.h"
 
 #include "UI.h"
 
-UI::UI()
+UI::UI(StepDriverSelector &selector, ManualDriver &manualDriver)
     : buttons{{ButtonID::UP, GPIOB, GPIO_PIN_0},
               {ButtonID::SEL, GPIOB, GPIO_PIN_1},
-              {ButtonID::DOWN, GPIOB, GPIO_PIN_2}} {
+              {ButtonID::DOWN, GPIOB, GPIO_PIN_2}},
+      selector{selector}, manualDriver{manualDriver} {
   LedController::init();
   apply_state(State::MENU_MANUAL);
 }
@@ -35,6 +39,10 @@ void UI::setupLed(UI::State nestate) {
   LedController::setBlink(stateLedModes[nestate].second);
 }
 
+UI::mode UI::state2Mode(UI::State state) {
+  return static_cast<mode>(state - MODE_COUNT - 1);
+}
+
 void UI::apply_state(State newstate) {
   const auto switch_state = [this](ButtonID btn) {
     State newstate;
@@ -56,35 +64,59 @@ void UI::apply_state(State newstate) {
   const auto enter_mode = [this](ButtonID btn) {
     if (btn == SEL) {
       assert(this->state < MODE_COUNT);
-      apply_state(static_cast<State>(this->state + MODE_COUNT + 1));
+      auto newstate = static_cast<State>(this->state + MODE_COUNT + 1);
+      apply_state(newstate);
+
+      selector.SelectDriver(state2Mode(newstate));
     }
   };
 
   const auto leave_mode = [this](ButtonID btn) {
     if (btn == SEL) {
       assert(this->state > MODE_COUNT);
-      apply_state(static_cast<State>(this->state - MODE_COUNT - 1));
+
+      selector.DisableAll();
+      apply_state(static_cast<State>(state2Mode(this->state)));
     }
   };
+
+  const auto start_moving = [this](ButtonID btn) {
+    LedController::setBlink(LedController::BLINK_FAST);
+    LedController::setColor(btn == ButtonID::UP ? LedController::Lime
+                                                : LedController::Purple);
+    manualDriver.move(btn == ButtonID::UP
+                          ? FreeRunningAccelStepper::Direction::DIRECTION_CW
+                          : FreeRunningAccelStepper::Direction::DIRECTION_CCW);
+  };
+
+  const auto stop_moving = [this](ButtonID btn) {
+    LedController::setBlink(LedController::BLINK_NO);
+    LedController::setColor(LedController::Green);
+    manualDriver.stop();
+  };
+
+  buttons[ButtonID::UP].reset_callbacks();
+  buttons[ButtonID::SEL].reset_callbacks();
+  buttons[ButtonID::DOWN].reset_callbacks();
 
   switch (newstate) {
   case State::MENU_MANUAL:
   case State::MENU_PWM:
   case State::MENU_STEPDIR:
-    buttons[ButtonID::UP].reset_callbacks();
     buttons[ButtonID::UP][BTN_ON_CLICK] = switch_state;
-    buttons[ButtonID::SEL].reset_callbacks();
     buttons[ButtonID::SEL][BTN_ON_CLICK] = enter_mode;
-    buttons[ButtonID::DOWN].reset_callbacks();
     buttons[ButtonID::DOWN][BTN_ON_CLICK] = switch_state;
     break;
   case State::MANUAL:
+    buttons[ButtonID::UP][BTN_ON_PUSH] = buttons[ButtonID::DOWN][BTN_ON_PUSH] =
+        start_moving;
+    buttons[ButtonID::UP][BTN_ON_RELEASE] =
+        buttons[ButtonID::DOWN][BTN_ON_RELEASE] = stop_moving;
+    buttons[ButtonID::SEL][BTN_ON_CLICK] = leave_mode;
+    break;
   case State::PWM:
   case State::STEP_DIR:
-    buttons[ButtonID::UP].reset_callbacks();
-    buttons[ButtonID::SEL].reset_callbacks();
     buttons[ButtonID::SEL][BTN_ON_CLICK] = leave_mode;
-    buttons[ButtonID::DOWN].reset_callbacks();
     break;
   default:
     assert(!"Illegal UI state");

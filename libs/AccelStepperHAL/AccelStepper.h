@@ -540,6 +540,7 @@ protected:
   DigitalOut _pin2;
   DigitalOut _pin3;
 
+public:
   /// \brief Direction indicator
   /// Symbolic names for the direction the motor is turning
   typedef enum {
@@ -547,6 +548,7 @@ protected:
     DIRECTION_CW = 1   ///< Counter-Clockwise
   } Direction;
 
+protected:
   /// Forces the library to compute a new instantaneous speed and set that as
   /// the current speed. It is called by
   /// the library:
@@ -617,7 +619,7 @@ protected:
   /// \param[in] step The current step phase number (0 to 7)
   virtual void step8(long step);
 
-private:
+  // private:
   /// Number of pins on the stepper motor. Permits 2 or 4. 2 pins is a
   /// bipolar, and 4 pins is a unipolar.
   uint8_t _interface; // 0, 1, 2, 4, 8, See MotorInterfaceType
