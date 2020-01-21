@@ -4,8 +4,13 @@
 #include "AbstractStepDriver.h"
 
 struct PWMDriver : AbstractStepDriver {
-  PWMDriver(FreeRunningAccelStepper &stepper);
+  static void begin(FreeRunningAccelStepper &stepper);
+  static PWMDriver &instance();
+
   PWMDriver(const PWMDriver &) = delete;
+
+private:
+  PWMDriver(FreeRunningAccelStepper &stepper);
 };
 
 #endif /* _PWM_DRIVER_H_ */

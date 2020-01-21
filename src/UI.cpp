@@ -1,4 +1,3 @@
-#include <cassert>
 #include <map>
 
 #include "ManualDriver.h"
@@ -7,6 +6,8 @@
 #include "LedController.h"
 
 #include "UI.h"
+
+#define assert(x) __asm__("BKPT");
 
 UI::UI(StepDriverSelector &selector, ManualDriver &manualDriver)
     : buttons{{ButtonID::UP, GPIOB, GPIO_PIN_0},

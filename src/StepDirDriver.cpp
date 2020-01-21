@@ -1,5 +1,3 @@
-#include <memory>
-
 #include <stm32f0xx_hal_gpio.h>
 
 #include "FreeRunningAccelStepper.h"
@@ -15,7 +13,7 @@
 #define STEP_INTERRUPT_IRQn EXTI4_15_IRQn
 #define STEP_IRQ_HEADER EXTI4_15_IRQHandler
 
-static std::unique_ptr<StepDirDriver> inst;
+static StepDirDriver *inst;
 
 extern "C" void STEP_IRQ_HEADER() { HAL_GPIO_EXTI_IRQHandler(STEP_pin); }
 
@@ -57,7 +55,10 @@ AbstractStepDriver &StepDirDriver::setEnabled(bool enable) {
 }
 
 void StepDirDriver::begin(FreeRunningAccelStepper &stepper, bool invert_dir) {
-  inst.reset(new StepDirDriver(stepper, invert_dir));
+  if (inst) {
+    delete inst;
+  }
+  inst = new StepDirDriver(stepper, invert_dir);
 }
 
 StepDirDriver &StepDirDriver::instance() { return *inst; }

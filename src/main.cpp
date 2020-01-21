@@ -24,14 +24,14 @@ extern "C" int main(void) {
   stepper.setMaxSpeed(1000);
   stepper.setAcceleration(3000);
 
-  ManualDriver manualDriver{stepper, 500};
-  PWMDriver pwmDriver{stepper};
+  ManualDriver::begin(stepper, 500);
+  PWMDriver::begin(stepper);
   StepDirDriver::begin(stepper, false);
 
-  StepDriverSelector selector{&manualDriver, &pwmDriver,
+  StepDriverSelector selector{&ManualDriver::instance(), &PWMDriver::instance(),
                               &StepDirDriver::instance()};
 
-  UI ui{selector, manualDriver};
+  UI ui{selector, ManualDriver::instance()};
 
   for (;;) {
     ui.process();

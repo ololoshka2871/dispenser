@@ -2,6 +2,17 @@
 
 #include "ManualDriver.h"
 
+static ManualDriver *inst;
+
+void ManualDriver::begin(FreeRunningAccelStepper &stepper, float acceleration) {
+  if (inst) {
+    delete inst;
+  }
+  inst = new ManualDriver{stepper, acceleration};
+}
+
+ManualDriver &ManualDriver::instance() { return *inst; }
+
 ManualDriver::ManualDriver(FreeRunningAccelStepper &_stepper,
                            float acceleration)
     : AbstractStepDriver{_stepper}, acceleration(acceleration),
