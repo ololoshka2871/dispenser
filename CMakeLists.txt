@@ -29,7 +29,7 @@ add_compile_options(
 add_compile_options($<$<COMPILE_LANGUAGE:C>:-std=gnu11>)
 
 add_compile_options(
-    $<$<COMPILE_LANGUAGE:CXX>:-std=c++14>
+    $<$<COMPILE_LANGUAGE:CXX>:-std=c++17>
     $<$<COMPILE_LANGUAGE:CXX>:-fno-use-cxa-atexit>
 )
 

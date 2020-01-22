@@ -1,5 +1,6 @@
 #include <stm32f0xx_hal_gpio.h>
 
+#include "EXTI_manager.h"
 #include "FreeRunningAccelStepper.h"
 
 #include "StepDirDriver.h"
@@ -15,16 +16,11 @@
 
 static StepDirDriver *inst;
 
-extern "C" void STEP_IRQ_HEADER() { HAL_GPIO_EXTI_IRQHandler(STEP_pin); }
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-  if (GPIO_Pin == STEP_pin) {
-    StepDirDriver::instance().doStep();
-  }
-}
-
-StepDirDriver::StepDirDriver(FreeRunningAccelStepper &stepper, bool invert_dir)
-    : AbstractStepDriver{stepper}, invert_dir{invert_dir} {
+StepDirDriver::StepDirDriver(FreeRunningAccelStepper &stepper,
+                             EXTI_manager_base &exti_manager, bool invert_dir)
+    : AbstractStepDriver{stepper},
+      exti_manager{exti_manager}, step_ex{[this]() { doStep(); }},
+      Exti_manager{exti_manager}, invert_dir{invert_dir} {
 
   GPIO_InitTypeDef step_pin{STEP_pin, GPIO_MODE_IT_FALLING, GPIO_NOPULL,
                             GPIO_SPEED_FREQ_LOW};
@@ -32,33 +28,28 @@ StepDirDriver::StepDirDriver(FreeRunningAccelStepper &stepper, bool invert_dir)
   GPIO_InitTypeDef dir_pin{DIR_pin, GPIO_MODE_INPUT, GPIO_NOPULL,
                            GPIO_SPEED_FREQ_LOW};
 
-  HAL_GPIO_Init(STEP_port, &step_pin);
   HAL_GPIO_Init(DIR_port, &dir_pin);
-
-  NVIC_SetPriority(STEP_INTERRUPT_IRQn, 1);
+  exti_manager.RegisterCallback(&step_ex, STEP_port, step_pin);
 }
 
 StepDirDriver::~StepDirDriver() {
-  NVIC_DisableIRQ(STEP_INTERRUPT_IRQn);
-
-  HAL_GPIO_DeInit(STEP_port, STEP_pin);
+  exti_manager.UnRegisterCallback(STEP_port, STEP_pin);
   HAL_GPIO_DeInit(DIR_port, DIR_pin);
 }
 
 AbstractStepDriver &StepDirDriver::setEnabled(bool enable) {
-  if (enable) {
-    NVIC_EnableIRQ(STEP_INTERRUPT_IRQn);
-  } else {
-    NVIC_DisableIRQ(STEP_INTERRUPT_IRQn);
-  }
+  exti_manager.EnableCallback(STEP_pin, enable);
+  NVIC_EnableIRQ(STEP_INTERRUPT_IRQn);
+
   return AbstractStepDriver::setEnabled(enable);
 }
 
-void StepDirDriver::begin(FreeRunningAccelStepper &stepper, bool invert_dir) {
+void StepDirDriver::begin(FreeRunningAccelStepper &stepper,
+                          EXTI_manager_base &exti_manager, bool invert_dir) {
   if (inst) {
     delete inst;
   }
-  inst = new StepDirDriver(stepper, invert_dir);
+  inst = new StepDirDriver(stepper, exti_manager, invert_dir);
 }
 
 StepDirDriver &StepDirDriver::instance() { return *inst; }

@@ -10,6 +10,7 @@ set(SOURCE_FILES
     UI.cpp
 
     Button.h
+    EXTI_manager.h
 
     AbstractStepDriver.cpp
     AbstractStepDriver.h
