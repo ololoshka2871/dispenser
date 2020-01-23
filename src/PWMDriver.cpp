@@ -20,6 +20,7 @@
 #define PWM_CH2 TIM_CHANNEL_2
 #define PWM_CH1_CCF TIM_FLAG_CC1
 #define PWM_CH2_CCF TIM_FLAG_CC2
+
 #define TIMx_IRQn TIM3_IRQn
 #define TIMx_IRQHandler TIM3_IRQHandler
 
@@ -28,7 +29,7 @@ static TIM_HandleTypeDef pwm_tim{
     {
         F_CPU / 1000000,               // Prescaler
         TIM_COUNTERMODE_UP,            // CounterMode
-        0,                             // Period
+        0xffff,                        // Period
         TIM_CLOCKDIVISION_DIV1,        // ClockDivision
         TIM_AUTORELOAD_PRELOAD_DISABLE // AutoReloadPreload
     }};
@@ -37,9 +38,9 @@ static TIM_HandleTypeDef pwm_tim{
 static GPIO_InitTypeDef pwm_pin_exti_start {
   PWM_pin,
 #if PWM_active_lvl
-      GPIO_MODE_IT_FALLING,
-#else
       GPIO_MODE_IT_RISING,
+#else
+      GPIO_MODE_IT_FALLING,
 #endif
       GPIO_NOPULL, GPIO_SPEED_FREQ_MEDIUM
 };
@@ -50,7 +51,7 @@ static GPIO_InitTypeDef pwm_pin_tim{PWM_pin, GPIO_MODE_AF_PP, GPIO_NOPULL,
 
 static PWMDriver *inst;
 
-void TIMx_IRQHandler(void) { HAL_TIM_IRQHandler(&pwm_tim); }
+extern "C" void TIMx_IRQHandler(void) { HAL_TIM_IRQHandler(&pwm_tim); }
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
   // Сработало прерывание захвата 2 значит мы отработали полный цыкл
@@ -99,12 +100,10 @@ PWMDriver &PWMDriver::instance() { return *inst; }
 PWMDriver::PWMDriver(FreeRunningAccelStepper &stepper,
                      EXTI_manager_base &exti_manager, float max_speed)
     : AbstractStepDriver{stepper}, exti_manager{exti_manager},
-      cycle_ready{false}, max_speed{max_speed}, start_it_hendler{[this]() {
-        this->exti_manager.UnRegisterCallback(PWM_port, PWM_pin);
-        startCycle();
-      }},
-      stop_it_hendler{[this]() {
-        this->exti_manager.UnRegisterCallback(PWM_port, PWM_pin);
+      cycle_ready{false}, max_speed{max_speed},
+      start_it_hendler{[this]() { start(); }}, stop_it_hendler{[this]() {
+        unregister_exti();
+        this->stepper.stopHard();
         prepare();
       }} {
 
@@ -139,6 +138,7 @@ PWMDriver::PWMDriver(FreeRunningAccelStepper &stepper,
       TIM_INPUTCHANNELPOLARITY_FALLING
 #endif
       ;
+  sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
   HAL_TIM_IC_ConfigChannel(&pwm_tim, &sConfigIC, PWM_CH2);
 
   // interrupts
@@ -169,10 +169,57 @@ void PWMDriver::unregister_exti() {
 }
 
 void PWMDriver::startCycle() {
-  __HAL_TIM_SET_COUNTER(&pwm_tim, 0);     // reset counter
-  HAL_TIM_IC_Start(&pwm_tim, PWM_CH1);    // enable chanel 1 caplure, no IT
-  HAL_TIM_IC_Start_IT(&pwm_tim, PWM_CH2); // enable chanel 2 capture, w/ IT
-  HAL_TIM_Base_Start_IT(&pwm_tim);        // enable overflow w/ IT
+  const auto clear_cc_it = [](TIM_HandleTypeDef &tim, uint16_t ch) {
+    switch (ch) {
+    case TIM_CHANNEL_1:
+      __HAL_TIM_CLEAR_IT(&tim, TIM_IT_CC1);
+      break;
+    case TIM_CHANNEL_2:
+      __HAL_TIM_CLEAR_IT(&tim, TIM_IT_CC2);
+      break;
+    case TIM_CHANNEL_3:
+      __HAL_TIM_CLEAR_IT(&tim, TIM_IT_CC3);
+      break;
+    case TIM_CHANNEL_4:
+      __HAL_TIM_CLEAR_IT(&tim, TIM_IT_CC4);
+      break;
+    }
+  };
+
+  __HAL_TIM_SET_COUNTER(&pwm_tim, 0); // reset counter
+  __HAL_TIM_SET_COMPARE(&pwm_tim, PWM_CH1, 0);
+  __HAL_TIM_SET_COMPARE(&pwm_tim, PWM_CH2, 0);
+
+  __HAL_TIM_CLEAR_IT(&pwm_tim, TIM_IT_UPDATE);
+  clear_cc_it(pwm_tim, PWM_CH1);
+  clear_cc_it(pwm_tim, PWM_CH2);
+
+  // enable chanel 1 caplure, no IT
+  TIM_CCxChannelCmd(pwm_tim.Instance, PWM_CH1, TIM_CCx_ENABLE);
+
+  // enable chanel 2 capture, w/ IT
+  switch (PWM_CH2) {
+  case TIM_CHANNEL_1:
+    __HAL_TIM_ENABLE_IT(&pwm_tim, TIM_IT_CC1);
+    break;
+  case TIM_CHANNEL_2:
+    __HAL_TIM_ENABLE_IT(&pwm_tim, TIM_IT_CC2);
+    break;
+  case TIM_CHANNEL_3:
+    __HAL_TIM_ENABLE_IT(&pwm_tim, TIM_IT_CC3);
+    break;
+  case TIM_CHANNEL_4:
+    __HAL_TIM_ENABLE_IT(&pwm_tim, TIM_IT_CC4);
+    break;
+  }
+  TIM_CCxChannelCmd(pwm_tim.Instance, PWM_CH2, TIM_CCx_ENABLE);
+
+  // enable overflow w/ IT
+  __HAL_TIM_ENABLE_IT(&pwm_tim, TIM_IT_UPDATE);
+
+  __HAL_TIM_ENABLE(&pwm_tim);
+
+  NVIC_EnableIRQ(TIMx_IRQn);
 }
 
 void PWMDriver::ready(uint32_t duration, uint32_t period) {
@@ -184,9 +231,9 @@ void PWMDriver::ready(uint32_t duration, uint32_t period) {
       GPIO_InitTypeDef pwm_pin_exti_stop{pwm_pin_exti_start};
       pwm_pin_exti_stop.Mode =
 #if PWM_active_lvl
-          GPIO_MODE_IT_RISING
-#else
           GPIO_MODE_IT_FALLING
+#else
+          GPIO_MODE_IT_RISING
 #endif
           ;
 

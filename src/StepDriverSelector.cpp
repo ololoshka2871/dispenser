@@ -4,7 +4,10 @@
 
 #include "StepDriverSelector.h"
 
-#define assert(x) __asm__("BKPT")
+#define assert(x)                                                              \
+  if (!(x)) {                                                                  \
+    __asm__("BKPT");                                                           \
+  }
 
 StepDriverSelector::StepDriverSelector(
     std::initializer_list<AbstractStepDriver *> drivers)

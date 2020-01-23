@@ -20,6 +20,10 @@ extern "C" int main(void) {
 
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
+  RCC->APB1ENR |= RCC_APB2ENR_DBGMCUEN;
+  DBGMCU->APB1FZ |=
+      DBGMCU_APB1_FZ_DBG_TIM3_STOP | DBGMCU_APB1_FZ_DBG_TIM14_STOP;
+
   EXTI4_15_IRQmanager::begin(1);
 
   auto &exti_mgr = EXTI4_15_IRQmanager::instance();

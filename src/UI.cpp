@@ -7,7 +7,10 @@
 
 #include "UI.h"
 
-#define assert(x) __asm__("BKPT");
+#define assert(x)                                                              \
+  if (!(x)) {                                                                  \
+    __asm__("BKPT");                                                           \
+  }
 
 UI::UI(StepDriverSelector &selector, ManualDriver &manualDriver)
     : buttons{{ButtonID::UP, GPIOB, GPIO_PIN_0},
