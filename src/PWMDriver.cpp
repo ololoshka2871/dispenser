@@ -139,11 +139,10 @@ PWMDriver::PWMDriver(FreeRunningAccelStepper &stepper,
 
   /**** Input compere init ****/
   assert(HAL_TIM_IC_Init(&pwm_tim) == HAL_OK);
-  /*
-    TIM_ClockConfigTypeDef sClockSourceConfig{TIM_CLOCKSOURCE_INTERNAL};
 
-    assert(HAL_TIM_ConfigClockSource(&pwm_tim, &sClockSourceConfig) == HAL_OK);
-    */
+  /**** Clock source ****/
+  TIM_ClockConfigTypeDef sClockSourceConfig{TIM_CLOCKSOURCE_INTERNAL};
+  assert(HAL_TIM_ConfigClockSource(&pwm_tim, &sClockSourceConfig) == HAL_OK);
 
   /**** Configure the slave mode ****/
   TIM_SlaveConfigTypeDef sSlaveConfig{TIM_SLAVEMODE_RESET, TIM_TS_TI2FP2,
