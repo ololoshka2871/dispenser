@@ -37,16 +37,11 @@ private:
 
   float max_speed;
 
-  const std::function<void()> start_it_hendler;
-  const std::function<void()> stop_it_hendler;
-
   PWMDriver(FreeRunningAccelStepper &stepper, EXTI_manager_base &exti_manager,
             float max_speed);
   void prepare();
   void deinitPin_counter();
   void disableAll();
-  void regisetr_exti(const std::function<void()> *f, GPIO_InitTypeDef &cfg);
-  void unregister_exti();
 
   void start();
 };
