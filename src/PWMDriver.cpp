@@ -41,10 +41,17 @@ extern "C" void PWM_timer_IRQHandler(void) { HAL_TIM_IRQHandler(&pwm_tim); }
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
   // Сработало прерывание захвата 2
 
-  auto cv1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
-  auto cv2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
-  if (cv1 && cv2) {
-    PWMDriver::instance().ready(cv1, cv2);
+  auto &drv = PWMDriver::instance();
+
+  if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {
+    drv.setState(PWMDriver::C1);
+  } else {
+    drv.setState(PWMDriver::C2);
+    auto cv1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
+    auto cv2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
+    if (cv1 && cv2) {
+      drv.ready(cv1, cv2);
+    }
   }
 }
 
@@ -53,27 +60,34 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
   auto &drv = PWMDriver::instance();
 
-  auto state = __HAL_TIM_GET_FLAG(&pwm_tim, TIM_FLAG_CC1) |
-               (__HAL_TIM_GET_FLAG(&pwm_tim, TIM_FLAG_CC2) << 1);
+  switch (drv.getState()) {
+  case PWMDriver::RESET:
+    // таймаут, стоп
+    drv.ready(0, 0);
+    break;
+  case PWMDriver::C1:
+  case PWMDriver::C2:
+    drv.setState(PWMDriver::RESET);
+    break;
+  }
 
+  /*
   // Нужно узнать, произошел-ли захват 1,
   if (__HAL_TIM_GET_FLAG(&pwm_tim, TIM_FLAG_CC1)) {
     __HAL_TIM_CLEAR_IT(&pwm_tim, TIM_IT_CC1);
     // ехать не надо, единичный импульс
-    drv.ready(state, 0);
+    drv.ready(0, 0);
   } else {
-    // 2 варианта:
-    // если уровень сейчас активный, то считать ШИМ 100%
+    // считать ШИМ 100%
     // если уровень сейчас не активный - ни чего нет на входе - стоп
-    if (!__HAL_TIM_GET_FLAG(&pwm_tim, TIM_FLAG_CC2)) {
-      // ехать не надо
-      drv.ready(0, 0);
+    if (__HAL_TIM_GET_FLAG(&pwm_tim, TIM_FLAG_CC2)) {
+      //
     } else {
       // макс скорость
       __HAL_TIM_CLEAR_IT(&pwm_tim, TIM_IT_CC2);
       drv.ready(1, 1);
     }
-  }
+  }*/
 }
 
 void PWMDriver::begin(FreeRunningAccelStepper &stepper,
@@ -169,7 +183,12 @@ void PWMDriver::ready(uint32_t duration, uint32_t period) {
   }
 }
 
+void PWMDriver::setState(PWMDriver::State s) { state = s; }
+
+PWMDriver::State PWMDriver::getState() const { return state; }
+
 void PWMDriver::start() {
+  state = RESET;
   this->duration = 0;
   this->period = 0;
 

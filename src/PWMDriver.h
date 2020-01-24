@@ -26,6 +26,10 @@ struct PWMDriver : AbstractStepDriver {
   // do not call this, for internal use only
   void ready(uint32_t duration, uint32_t period);
 
+  enum State { RESET, C1, C2 };
+  void setState(State s);
+  State getState() const;
+
 private:
   EXTI_manager_base &exti_manager;
   volatile uint32_t duration;
@@ -33,6 +37,7 @@ private:
   volatile bool cycle_ready;
 
   float max_speed;
+  State state;
 
   PWMDriver(FreeRunningAccelStepper &stepper, EXTI_manager_base &exti_manager,
             float max_speed);
