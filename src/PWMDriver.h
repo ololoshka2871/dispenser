@@ -27,6 +27,7 @@ struct PWMDriver : AbstractStepDriver {
   static void trigger();
   void startCycle();
   void ready(uint32_t duration, uint32_t period);
+  void restart();
 
 private:
   EXTI_manager_base &exti_manager;

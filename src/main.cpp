@@ -33,7 +33,7 @@ extern "C" int main(void) {
   FreeRunningAccelStepper stepper{
       AccelStepper::FULL4WIRE, DigitalOut{GPIOB, GPIO_PIN_7},
       DigitalOut{GPIOB, GPIO_PIN_5}, DigitalOut{GPIOB, GPIO_PIN_6},
-      DigitalOut{GPIOB, GPIO_PIN_4}};
+      /*DigitalOut{GPIOB, GPIO_PIN_4}*/};
 
   stepper.setMaxSpeed(1000);
   stepper.setAcceleration(3000);

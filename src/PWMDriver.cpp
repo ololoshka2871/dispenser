@@ -1,6 +1,8 @@
 #include <stm32f0xx_hal.h>
 #include <stm32f0xx_hal_gpio.h>
 
+#include <DigitalOut.h>
+
 #include "EXTI_manager.h"
 #include "FreeRunningAccelStepper.h"
 
@@ -51,28 +53,57 @@ static GPIO_InitTypeDef pwm_pin_tim{PWM_pin, GPIO_MODE_AF_PP, GPIO_NOPULL,
 
 static PWMDriver *inst;
 
+DigitalOut *test_out; //{GPIOB, GPIO_PIN_4};
+
 extern "C" void TIMx_IRQHandler(void) { HAL_TIM_IRQHandler(&pwm_tim); }
+
+static void clear_cc_it(const TIM_HandleTypeDef &tim, const uint16_t ch) {
+  switch (ch) {
+  case TIM_CHANNEL_1:
+    __HAL_TIM_CLEAR_IT(&tim, TIM_IT_CC1);
+    break;
+  case TIM_CHANNEL_2:
+    __HAL_TIM_CLEAR_IT(&tim, TIM_IT_CC2);
+    break;
+  case TIM_CHANNEL_3:
+    __HAL_TIM_CLEAR_IT(&tim, TIM_IT_CC3);
+    break;
+  case TIM_CHANNEL_4:
+    __HAL_TIM_CLEAR_IT(&tim, TIM_IT_CC4);
+    break;
+  }
+};
+
+static void stop_timer() {
+  pwm_tim.Instance->CR1 &= ~(TIM_CR1_CEN); // stop
+  TIM_CCxChannelCmd(pwm_tim.Instance, PWM_CH1,
+                    TIM_CCx_DISABLE); // disable capture 1
+  TIM_CCxChannelCmd(pwm_tim.Instance, PWM_CH2,
+                    TIM_CCx_DISABLE); // disable capture 2
+
+  test_out->write(0);
+}
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
   // Сработало прерывание захвата 2 значит мы отработали полный цыкл
   // получаем захваченные значения, отправляем на обработку, стартуем новый цыкл
 
-  HAL_TIM_Base_Stop_IT(&pwm_tim);
+  stop_timer();
 
   auto cv1 = __HAL_TIM_GET_COMPARE(&pwm_tim, PWM_CH1);
   auto cv2 = __HAL_TIM_GET_COMPARE(&pwm_tim, PWM_CH2);
 
-  __HAL_TIM_CLEAR_FLAG(&pwm_tim, PWM_CH1_CCF | PWM_CH2_CCF);
+  //__HAL_TIM_CLEAR_FLAG(&pwm_tim, PWM_CH1_CCF | PWM_CH2_CCF);
 
   auto &drv = PWMDriver::instance();
-  drv.ready(cv1, cv2);
   drv.startCycle();
+  drv.ready(cv1, cv2);
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   // Прерывание переполнения
 
-  HAL_TIM_Base_Stop_IT(&pwm_tim);
+  stop_timer();
 
   auto &drv = PWMDriver::instance();
 
@@ -107,6 +138,9 @@ PWMDriver::PWMDriver(FreeRunningAccelStepper &stepper,
         prepare();
       }} {
 
+  test_out = new DigitalOut{GPIOB, GPIO_PIN_4};
+  test_out->write(0);
+
   PWM_timer_clocking();
 
   HAL_TIM_Base_Init(&pwm_tim);
@@ -127,7 +161,7 @@ PWMDriver::PWMDriver(FreeRunningAccelStepper &stepper,
 #else
     TIM_INPUTCHANNELPOLARITY_RISING,
 #endif
-        TIM_ICSELECTION_DIRECTTI, TIM_ICPSC_DIV1, 0
+        TIM_ICSELECTION_DIRECTTI, TIM_ICPSC_DIV1, 3
   };
   HAL_TIM_IC_ConfigChannel(&pwm_tim, &sConfigIC, PWM_CH1);
 
@@ -169,30 +203,17 @@ void PWMDriver::unregister_exti() {
 }
 
 void PWMDriver::startCycle() {
-  const auto clear_cc_it = [](TIM_HandleTypeDef &tim, uint16_t ch) {
-    switch (ch) {
-    case TIM_CHANNEL_1:
-      __HAL_TIM_CLEAR_IT(&tim, TIM_IT_CC1);
-      break;
-    case TIM_CHANNEL_2:
-      __HAL_TIM_CLEAR_IT(&tim, TIM_IT_CC2);
-      break;
-    case TIM_CHANNEL_3:
-      __HAL_TIM_CLEAR_IT(&tim, TIM_IT_CC3);
-      break;
-    case TIM_CHANNEL_4:
-      __HAL_TIM_CLEAR_IT(&tim, TIM_IT_CC4);
-      break;
-    }
-  };
+  test_out->write(1);
+
+  __HAL_TIM_CLEAR_IT(&pwm_tim, TIM_IT_UPDATE);
+  clear_cc_it(pwm_tim, PWM_CH1);
+  clear_cc_it(pwm_tim, PWM_CH2);
 
   __HAL_TIM_SET_COUNTER(&pwm_tim, 0); // reset counter
   __HAL_TIM_SET_COMPARE(&pwm_tim, PWM_CH1, 0);
   __HAL_TIM_SET_COMPARE(&pwm_tim, PWM_CH2, 0);
 
-  __HAL_TIM_CLEAR_IT(&pwm_tim, TIM_IT_UPDATE);
-  clear_cc_it(pwm_tim, PWM_CH1);
-  clear_cc_it(pwm_tim, PWM_CH2);
+  __HAL_TIM_ENABLE(&pwm_tim);
 
   // enable chanel 1 caplure, no IT
   TIM_CCxChannelCmd(pwm_tim.Instance, PWM_CH1, TIM_CCx_ENABLE);
@@ -216,8 +237,6 @@ void PWMDriver::startCycle() {
 
   // enable overflow w/ IT
   __HAL_TIM_ENABLE_IT(&pwm_tim, TIM_IT_UPDATE);
-
-  __HAL_TIM_ENABLE(&pwm_tim);
 
   NVIC_EnableIRQ(TIMx_IRQn);
 }
@@ -243,12 +262,21 @@ void PWMDriver::ready(uint32_t duration, uint32_t period) {
       start();
     }
   }
-  this->duration = duration;
-  this->period = period;
-  cycle_ready = true;
+  if (period != this->period || duration != this->duration) {
+    this->duration = duration;
+    this->period = period;
+    cycle_ready = true;
+  }
+}
+
+void PWMDriver::restart() {
+  disableAll();
+  prepare();
 }
 
 void PWMDriver::start() {
+  this->duration = 0;
+  this->period = 0;
   unregister_exti();
   HAL_GPIO_Init(PWM_port, &pwm_pin_tim);
   startCycle();
@@ -264,15 +292,19 @@ AbstractStepDriver &PWMDriver::setEnabled(bool enable) {
 }
 
 void PWMDriver::process() {
-  if (cycle_ready && enabled) {
+  if (cycle_ready) {
     // do calculations, update stepper settings
-    if (period) {
-      float dest_speed = max_speed * duration / period;
+    cycle_ready = false;
+    //*test_out = !(*test_out);
+    if (enabled) {
+      if (period) {
+        float dest_speed = max_speed * duration / period;
 
-      stepper.setMaxSpeed(dest_speed);
-      stepper.moveFree(FreeRunningAccelStepper::DIRECTION_CW);
-    } else {
-      stepper.stop();
+        stepper.setMaxSpeed(dest_speed);
+        // stepper.moveFree(FreeRunningAccelStepper::DIRECTION_CW);
+      } else {
+        // stepper.stop();
+      }
     }
   }
 }
