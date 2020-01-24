@@ -53,11 +53,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
   auto &drv = PWMDriver::instance();
 
+  auto state = __HAL_TIM_GET_FLAG(&pwm_tim, TIM_FLAG_CC1) |
+               (__HAL_TIM_GET_FLAG(&pwm_tim, TIM_FLAG_CC2) << 1);
+
   // Нужно узнать, произошел-ли захват 1,
   if (__HAL_TIM_GET_FLAG(&pwm_tim, TIM_FLAG_CC1)) {
     __HAL_TIM_CLEAR_IT(&pwm_tim, TIM_IT_CC1);
     // ехать не надо, единичный импульс
-    drv.ready(0, 0);
+    drv.ready(state, 0);
   } else {
     // 2 варианта:
     // если уровень сейчас активный, то считать ШИМ 100%
