@@ -24,10 +24,7 @@ struct PWMDriver : AbstractStepDriver {
   void process();
 
   // do not call this, for internal use only
-  static void trigger();
-  void startCycle();
   void ready(uint32_t duration, uint32_t period);
-  void restart();
 
 private:
   EXTI_manager_base &exti_manager;
@@ -39,9 +36,8 @@ private:
 
   PWMDriver(FreeRunningAccelStepper &stepper, EXTI_manager_base &exti_manager,
             float max_speed);
-  void prepare();
-  void deinitPin_counter();
-  void disableAll();
+
+  void stop();
 
   void start();
 };

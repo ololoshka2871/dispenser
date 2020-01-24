@@ -18,6 +18,7 @@ define_EXTI_manager(4_15_IRQ);
 extern "C" int main(void) {
   InitBoard();
 
+  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   RCC->APB1ENR |= RCC_APB2ENR_DBGMCUEN;
