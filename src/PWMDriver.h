@@ -14,7 +14,8 @@ struct GPIO_InitTypeDef;
 
 struct PWMDriver : AbstractStepDriver {
   static void begin(FreeRunningAccelStepper &stepper,
-                    EXTI_manager_base &exti_manager, float max_speed);
+                    EXTI_manager_base &exti_manager, float max_speed,
+                    float acceleration);
   static PWMDriver &instance();
 
   PWMDriver(const PWMDriver &) = delete;
@@ -35,12 +36,13 @@ private:
   volatile uint32_t duration;
   volatile uint32_t period;
   volatile bool cycle_ready;
-
-  float max_speed;
   volatile State state;
 
+  float max_speed;
+  float acceleration;
+
   PWMDriver(FreeRunningAccelStepper &stepper, EXTI_manager_base &exti_manager,
-            float max_speed);
+            float max_speed, float acceleration);
 
   void stop();
 

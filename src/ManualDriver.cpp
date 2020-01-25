@@ -4,26 +4,25 @@
 
 static ManualDriver *inst;
 
-void ManualDriver::begin(FreeRunningAccelStepper &stepper, float acceleration) {
+void ManualDriver::begin(FreeRunningAccelStepper &stepper, float max_speed,
+                         float acceleration) {
   if (inst) {
     delete inst;
   }
-  inst = new ManualDriver{stepper, acceleration};
+  inst = new ManualDriver{stepper, max_speed, acceleration};
 }
 
 ManualDriver &ManualDriver::instance() { return *inst; }
 
-ManualDriver::ManualDriver(FreeRunningAccelStepper &_stepper,
+ManualDriver::ManualDriver(FreeRunningAccelStepper &_stepper, float max_speed,
                            float acceleration)
-    : AbstractStepDriver{_stepper}, acceleration(acceleration),
-      _saveAcceleration(acceleration) {}
+    : AbstractStepDriver{_stepper}, max_speed{max_speed}, acceleration{
+                                                              acceleration} {}
 
 AbstractStepDriver &ManualDriver::setEnabled(bool enable) {
   if (enable) {
-    _saveAcceleration = stepper.getAcceleration();
+    stepper.setMaxSpeed(max_speed);
     stepper.setAcceleration(acceleration);
-  } else {
-    stepper.setAcceleration(_saveAcceleration);
   }
   return AbstractStepDriver::setEnabled(enable);
 }
@@ -31,13 +30,11 @@ AbstractStepDriver &ManualDriver::setEnabled(bool enable) {
 void ManualDriver::move(FreeRunningAccelStepper::Direction dir) {
   if (enabled) {
     stepper.moveFree(dir);
-    // stepper.doStep(FreeRunningAccelStepper::DIRECTION_CW);
   }
 }
 
 void ManualDriver::stop() {
   if (enabled) {
     stepper.stopHard();
-    // stepper.doStep(FreeRunningAccelStepper::DIRECTION_CCW);
   }
 }

@@ -1,7 +1,7 @@
 #include <stm32f0xx_hal.h>
 #include <stm32f0xx_hal_tim_ex.h>
 
-#include <DigitalOut.h>
+#include "LedController.h"
 
 #include "FreeRunningAccelStepper.h"
 
@@ -19,6 +19,8 @@
 #define PWM_timer_IRQn TIM3_IRQn
 #define PWM_timer_IRQHandler TIM3_IRQHandler
 
+#define MIN_SPEED 100
+
 #define assert(x)                                                              \
   if (!(x)) {                                                                  \
     __asm__("BKPT");                                                           \
@@ -35,8 +37,6 @@ static TIM_HandleTypeDef pwm_tim{
     }};
 
 static PWMDriver *inst;
-
-static DigitalOut *test_pin;
 
 extern "C" void PWM_timer_IRQHandler(void) { HAL_TIM_IRQHandler(&pwm_tim); }
 
@@ -56,8 +56,6 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
     }
 
     drv.setState(PWMDriver::START);
-
-    *test_pin = 1;
   } else {
     // falling
     drv.setState(PWMDriver::FALL_CAPTURED);
@@ -65,7 +63,6 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-  *test_pin = 1;
   // Прерывание переполнения
 
   auto &drv = PWMDriver::instance();
@@ -88,22 +85,22 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 }
 
 void PWMDriver::begin(FreeRunningAccelStepper &stepper,
-                      EXTI_manager_base &exti_manager, float max_speed) {
+                      EXTI_manager_base &exti_manager, float max_speed,
+                      float acceleration) {
   if (inst) {
     delete inst;
   }
-  inst = new PWMDriver{stepper, exti_manager, max_speed};
+  inst = new PWMDriver{stepper, exti_manager, max_speed, acceleration};
 }
 
 PWMDriver &PWMDriver::instance() { return *inst; }
 
 PWMDriver::PWMDriver(FreeRunningAccelStepper &stepper,
-                     EXTI_manager_base &exti_manager, float max_speed)
+                     EXTI_manager_base &exti_manager, float max_speed,
+                     float acceleration)
     : AbstractStepDriver{stepper}, exti_manager{exti_manager},
-      cycle_ready{false}, max_speed{max_speed} {
+      cycle_ready{false}, max_speed{max_speed}, acceleration{acceleration} {
   PWM_timer_clocking();
-
-  test_pin = new DigitalOut /*{GPIOB, GPIO_PIN_4}*/;
 
   // input pin
   GPIO_InitTypeDef pwm_pin_tim{PWM_pin, GPIO_MODE_AF_PP, GPIO_NOPULL,
@@ -202,6 +199,7 @@ void PWMDriver::start() {
 
 AbstractStepDriver &PWMDriver::setEnabled(bool enable) {
   if (enable) {
+    stepper.setAcceleration(acceleration);
     start();
   } else {
     stop();
@@ -210,19 +208,19 @@ AbstractStepDriver &PWMDriver::setEnabled(bool enable) {
 }
 
 void PWMDriver::process() {
-  *test_pin = 0;
   if (cycle_ready) {
     // do calculations, update stepper settings
     cycle_ready = false;
-    //*test_out = !(*test_out);
     if (enabled) {
       if (period) {
+        LedController::setBlink(LedController::BLINK_FAST);
         float dest_speed = max_speed * duration / period;
 
-        stepper.setMaxSpeed(dest_speed);
+        stepper.setMaxSpeed(dest_speed < MIN_SPEED ? MIN_SPEED : dest_speed);
         stepper.moveFree(FreeRunningAccelStepper::DIRECTION_CW);
       } else {
         stepper.stopHard();
+        LedController::setBlink(LedController::BLINK_NO);
       }
     }
   }

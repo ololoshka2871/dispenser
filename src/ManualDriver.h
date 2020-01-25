@@ -6,7 +6,8 @@
 
 struct ManualDriver : public AbstractStepDriver {
 
-  static void begin(FreeRunningAccelStepper &stepper, float acceleration);
+  static void begin(FreeRunningAccelStepper &stepper, float max_speed,
+                    float acceleration);
   static ManualDriver &instance();
 
   ManualDriver(const ManualDriver &) = delete;
@@ -17,10 +18,11 @@ struct ManualDriver : public AbstractStepDriver {
   void stop();
 
 private:
-  ManualDriver(FreeRunningAccelStepper &stepper, float acceleration);
+  ManualDriver(FreeRunningAccelStepper &stepper, float max_speed,
+               float acceleration);
 
+  float max_speed;
   float acceleration;
-  float _saveAcceleration;
 };
 
 #endif /* _MANUAL_DRIVER_H_ */

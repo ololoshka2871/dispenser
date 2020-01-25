@@ -6,6 +6,7 @@ set(SOURCE_FILES
     _init.c
     hardfault.cpp
     systick.c
+    LedController.h
     LedController.cpp
     UI.cpp
 
