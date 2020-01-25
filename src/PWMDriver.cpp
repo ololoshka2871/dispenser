@@ -41,13 +41,13 @@ static DigitalOut *test_pin;
 extern "C" void PWM_timer_IRQHandler(void) { HAL_TIM_IRQHandler(&pwm_tim); }
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
-  // Сработало прерывание захвата 2
+  // Сработало прерывание захвата
+  __HAL_TIM_CLEAR_IT(htim, TIM_IT_UPDATE);
 
   auto &drv = PWMDriver::instance();
 
   if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {
     // raising
-    __HAL_TIM_CLEAR_IT(htim, TIM_IT_UPDATE);
 
     if (drv.getState() == PWMDriver::FALL_CAPTURED) {
       auto t = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
@@ -103,7 +103,7 @@ PWMDriver::PWMDriver(FreeRunningAccelStepper &stepper,
       cycle_ready{false}, max_speed{max_speed} {
   PWM_timer_clocking();
 
-  test_pin = new DigitalOut{GPIOB, GPIO_PIN_4};
+  test_pin = new DigitalOut /*{GPIOB, GPIO_PIN_4}*/;
 
   // input pin
   GPIO_InitTypeDef pwm_pin_tim{PWM_pin, GPIO_MODE_AF_PP, GPIO_NOPULL,
@@ -220,9 +220,9 @@ void PWMDriver::process() {
         float dest_speed = max_speed * duration / period;
 
         stepper.setMaxSpeed(dest_speed);
-        // stepper.moveFree(FreeRunningAccelStepper::DIRECTION_CW);
+        stepper.moveFree(FreeRunningAccelStepper::DIRECTION_CW);
       } else {
-        // stepper.stop();
+        stepper.stopHard();
       }
     }
   }
