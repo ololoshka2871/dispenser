@@ -1,5 +1,5 @@
 #include <stm32f0xx_hal.h>
-#include <stm32f0xx_hal_gpio.h>
+#include <stm32f0xx_hal_tim_ex.h>
 
 #include <DigitalOut.h>
 
@@ -36,6 +36,8 @@ static TIM_HandleTypeDef pwm_tim{
 
 static PWMDriver *inst;
 
+static DigitalOut *test_pin;
+
 extern "C" void PWM_timer_IRQHandler(void) { HAL_TIM_IRQHandler(&pwm_tim); }
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
@@ -44,50 +46,45 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
   auto &drv = PWMDriver::instance();
 
   if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {
-    drv.setState(PWMDriver::C1);
-  } else {
-    drv.setState(PWMDriver::C2);
-    auto cv1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
-    auto cv2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
-    if (cv1 && cv2) {
-      drv.ready(cv1, cv2);
+    // raising
+    __HAL_TIM_CLEAR_IT(htim, TIM_IT_UPDATE);
+
+    if (drv.getState() == PWMDriver::FALL_CAPTURED) {
+      auto t = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
+      auto duration = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
+      drv.ready(t, duration);
     }
+
+    drv.setState(PWMDriver::START);
+
+    *test_pin = 1;
+  } else {
+    // falling
+    drv.setState(PWMDriver::FALL_CAPTURED);
   }
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+  *test_pin = 1;
   // Прерывание переполнения
 
   auto &drv = PWMDriver::instance();
 
   switch (drv.getState()) {
-  case PWMDriver::RESET:
-    // таймаут, стоп
+  case PWMDriver::RESET: // таймаут, стоп
     drv.ready(0, 0);
     break;
-  case PWMDriver::C1:
-  case PWMDriver::C2:
+  case PWMDriver::FALL_CAPTURED: // одиночный импульс
     drv.setState(PWMDriver::RESET);
+    drv.ready(0, 0);
+    break;
+  case PWMDriver::START: // таймаут после старта -> PWM 100%
+    drv.ready(1, 1);
+    drv.setState(PWMDriver::HOLD_100);
+    break;
+  case PWMDriver::HOLD_100: // ждум конца PWM 100%
     break;
   }
-
-  /*
-  // Нужно узнать, произошел-ли захват 1,
-  if (__HAL_TIM_GET_FLAG(&pwm_tim, TIM_FLAG_CC1)) {
-    __HAL_TIM_CLEAR_IT(&pwm_tim, TIM_IT_CC1);
-    // ехать не надо, единичный импульс
-    drv.ready(0, 0);
-  } else {
-    // считать ШИМ 100%
-    // если уровень сейчас не активный - ни чего нет на входе - стоп
-    if (__HAL_TIM_GET_FLAG(&pwm_tim, TIM_FLAG_CC2)) {
-      //
-    } else {
-      // макс скорость
-      __HAL_TIM_CLEAR_IT(&pwm_tim, TIM_IT_CC2);
-      drv.ready(1, 1);
-    }
-  }*/
 }
 
 void PWMDriver::begin(FreeRunningAccelStepper &stepper,
@@ -106,6 +103,8 @@ PWMDriver::PWMDriver(FreeRunningAccelStepper &stepper,
       cycle_ready{false}, max_speed{max_speed} {
   PWM_timer_clocking();
 
+  test_pin = new DigitalOut{GPIOB, GPIO_PIN_4};
+
   // input pin
   GPIO_InitTypeDef pwm_pin_tim{PWM_pin, GPIO_MODE_AF_PP, GPIO_NOPULL,
                                GPIO_SPEED_FREQ_LOW, PWM_pin_AF};
@@ -120,9 +119,9 @@ PWMDriver::PWMDriver(FreeRunningAccelStepper &stepper,
 
   /**** Configure the slave mode ****/
   TIM_SlaveConfigTypeDef sSlaveConfig{TIM_SLAVEMODE_RESET, TIM_TS_TI1FP1,
-                                      TIM_TRIGGERPOLARITY_NONINVERTED,
+                                      TIM_TRIGGERPOLARITY_FALLING,
                                       TIM_TRIGGERPRESCALER_DIV1, 0};
-  assert(HAL_TIM_SlaveConfigSynchronization(&pwm_tim, &sSlaveConfig) == HAL_OK);
+  assert(HAL_TIM_SlaveConfigSynchro(&pwm_tim, &sSlaveConfig) == HAL_OK);
 
   /**** Configure the master mode ****/
   TIM_MasterConfigTypeDef sMasterConfig{TIM_TRGO_RESET,
@@ -133,9 +132,9 @@ PWMDriver::PWMDriver(FreeRunningAccelStepper &stepper,
   /****  Configure the Input Capture ****/
   TIM_IC_InitTypeDef sConfigIC {
 #if PWM_active_lvl
-    TIM_INPUTCHANNELPOLARITY_FALLING,
-#else
     TIM_INPUTCHANNELPOLARITY_RISING,
+#else
+    TIM_INPUTCHANNELPOLARITY_FALLING,
 #endif
         TIM_ICSELECTION_DIRECTTI, TIM_ICPSC_DIV1, 0
   };
@@ -144,11 +143,12 @@ PWMDriver::PWMDriver(FreeRunningAccelStepper &stepper,
 
   sConfigIC.ICPolarity =
 #if PWM_active_lvl
-      TIM_INPUTCHANNELPOLARITY_RISING
-#else
       TIM_INPUTCHANNELPOLARITY_FALLING
+#else
+      TIM_INPUTCHANNELPOLARITY_RISING
 #endif
       ;
+
   sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
   assert(HAL_TIM_IC_ConfigChannel(&pwm_tim, &sConfigIC, TIM_CHANNEL_2) ==
          HAL_OK);
@@ -210,6 +210,7 @@ AbstractStepDriver &PWMDriver::setEnabled(bool enable) {
 }
 
 void PWMDriver::process() {
+  *test_pin = 0;
   if (cycle_ready) {
     // do calculations, update stepper settings
     cycle_ready = false;
