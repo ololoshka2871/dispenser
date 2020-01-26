@@ -29,12 +29,14 @@ AbstractStepDriver &ManualDriver::setEnabled(bool enable) {
 
 void ManualDriver::move(FreeRunningAccelStepper::Direction dir) {
   if (enabled) {
+    stepper.enableOutputs();
     stepper.moveFree(dir);
   }
 }
 
 void ManualDriver::stop() {
   if (enabled) {
+    stepper.disableOutputs();
     stepper.stopHard();
   }
 }

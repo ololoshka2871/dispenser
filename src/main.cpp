@@ -13,6 +13,8 @@
 
 #include <iterator>
 
+#define DEFAULT_SPEED 500
+
 define_EXTI_manager(4_15_IRQ);
 
 extern "C" int main(void) {
@@ -36,11 +38,11 @@ extern "C" int main(void) {
       DigitalOut{GPIOB, GPIO_PIN_5}, DigitalOut{GPIOB, GPIO_PIN_6},
       DigitalOut{GPIOB, GPIO_PIN_4}};
 
-  stepper.setMaxSpeed(1000);
+  stepper.setMaxSpeed(DEFAULT_SPEED);
   stepper.setAcceleration(3000);
 
-  ManualDriver::begin(stepper, 1000, 500);
-  PWMDriver::begin(stepper, exti_mgr, 1000, 3000);
+  ManualDriver::begin(stepper, DEFAULT_SPEED, 500);
+  PWMDriver::begin(stepper, exti_mgr, DEFAULT_SPEED, 3000);
   StepDirDriver::begin(stepper, exti_mgr, false);
 
   auto &pwmDriver = PWMDriver::instance();

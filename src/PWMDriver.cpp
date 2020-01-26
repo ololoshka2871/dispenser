@@ -19,7 +19,7 @@
 #define PWM_timer_IRQn TIM3_IRQn
 #define PWM_timer_IRQHandler TIM3_IRQHandler
 
-#define MIN_SPEED 100
+#define MIN_SPEED 1
 
 #define assert(x)                                                              \
   if (!(x)) {                                                                  \
@@ -217,9 +217,11 @@ void PWMDriver::process() {
         float dest_speed = max_speed * duration / period;
 
         stepper.setMaxSpeed(dest_speed < MIN_SPEED ? MIN_SPEED : dest_speed);
+        stepper.enableOutputs();
         stepper.moveFree(FreeRunningAccelStepper::DIRECTION_CW);
       } else {
         stepper.stopHard();
+        stepper.disableOutputs();
         LedController::setBlink(LedController::BLINK_NO);
       }
     }
