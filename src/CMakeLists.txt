@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 
+add_subdirectory(stepper)
+
 set(SOURCE_FILES
     main.cpp
     BoardInit.cpp
@@ -24,9 +26,6 @@ set(SOURCE_FILES
 
     StepDriverSelector.h
     StepDriverSelector.cpp
-
-    FreeRunningAccelStepper.cpp
-    FreeRunningAccelStepper.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
@@ -38,7 +37,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         STM32_HAL_STM32F042x6
     -Wl,--no-whole-archive
     ws2812b
-    AccelStepperHAL
+    stepper
 )
 
 ####### some helpers to generate targets
