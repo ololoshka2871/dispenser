@@ -33,6 +33,7 @@ void FreeRunningAccelStepper::stopHard() {
   free_run = false;
 
   _stepInterval = 0;
+  _targetPos = _currentPos;
   _speed = 0.0;
   _n = 0;
 }

@@ -118,7 +118,7 @@ PWMDriver::PWMDriver(FreeRunningAccelStepper &stepper,
   TIM_SlaveConfigTypeDef sSlaveConfig{TIM_SLAVEMODE_RESET, TIM_TS_TI1FP1,
                                       TIM_TRIGGERPOLARITY_FALLING,
                                       TIM_TRIGGERPRESCALER_DIV1, 0};
-  assert(HAL_TIM_SlaveConfigSynchro(&pwm_tim, &sSlaveConfig) == HAL_OK);
+  assert(HAL_TIM_SlaveConfigSynchronization(&pwm_tim, &sSlaveConfig) == HAL_OK);
 
   /**** Configure the master mode ****/
   TIM_MasterConfigTypeDef sMasterConfig{TIM_TRGO_RESET,
