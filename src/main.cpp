@@ -34,9 +34,19 @@ extern "C" int main(void) {
   // Инициализируемся с последовательностью выводов IN1-IN3-IN2-IN4
   // для использования AccelStepper с 28BYJ-48
   FreeRunningAccelStepper stepper{
-      AccelStepper::FULL4WIRE, DigitalOut{GPIOB, GPIO_PIN_7},
-      DigitalOut{GPIOB, GPIO_PIN_5}, DigitalOut{GPIOB, GPIO_PIN_6},
-      DigitalOut{GPIOB, GPIO_PIN_4}};
+      AccelStepper::FULL4WIRE,
+      // forward
+      DigitalOut{GPIOB, GPIO_PIN_4}, DigitalOut{GPIOB, GPIO_PIN_6},
+      DigitalOut{GPIOB, GPIO_PIN_5}, DigitalOut{GPIOB, GPIO_PIN_7}
+
+      // revers
+      /*
+      DigitalOut{GPIOB, GPIO_PIN_7},
+      DigitalOut{GPIOB, GPIO_PIN_5},
+      DigitalOut{GPIOB, GPIO_PIN_6},
+      DigitalOut{GPIOB, GPIO_PIN_4}
+      */
+  };
 
   stepper.setMaxSpeed(DEFAULT_SPEED);
   stepper.setAcceleration(3000);
