@@ -51,7 +51,7 @@ extern "C" int main(void) {
   stepper.setMaxSpeed(DEFAULT_SPEED);
   stepper.setAcceleration(3000);
 
-  ManualDriver::begin(stepper, DEFAULT_SPEED, 500);
+  ManualDriver::begin(stepper, DEFAULT_SPEED, 250);
   PWMDriver::begin(stepper, exti_mgr, DEFAULT_SPEED, 3000);
   StepDirDriver::begin(stepper, exti_mgr, false);
 
