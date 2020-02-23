@@ -41,12 +41,16 @@ private:
   float max_speed;
   float acceleration;
 
+  bool retract;
+
   PWMDriver(FreeRunningAccelStepper &stepper, EXTI_manager_base &exti_manager,
             float max_speed, float acceleration);
 
   void stop();
 
   void start();
+
+  void do_stop();
 };
 
 #endif /* _PWM_DRIVER_H_ */

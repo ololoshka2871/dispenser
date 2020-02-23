@@ -99,7 +99,8 @@ PWMDriver::PWMDriver(FreeRunningAccelStepper &stepper,
                      EXTI_manager_base &exti_manager, float max_speed,
                      float acceleration)
     : AbstractStepDriver{stepper}, exti_manager{exti_manager},
-      cycle_ready{false}, max_speed{max_speed}, acceleration{acceleration} {
+      cycle_ready{false}, max_speed{max_speed},
+      acceleration{acceleration}, retract{false} {
   PWM_timer_clocking();
 
   // input pin
@@ -118,7 +119,7 @@ PWMDriver::PWMDriver(FreeRunningAccelStepper &stepper,
   TIM_SlaveConfigTypeDef sSlaveConfig{TIM_SLAVEMODE_RESET, TIM_TS_TI1FP1,
                                       TIM_TRIGGERPOLARITY_FALLING,
                                       TIM_TRIGGERPRESCALER_DIV1, 0};
-  assert(HAL_TIM_SlaveConfigSynchronization(&pwm_tim, &sSlaveConfig) == HAL_OK);
+  assert(HAL_TIM_SlaveConfigSynchro(&pwm_tim, &sSlaveConfig) == HAL_OK);
 
   /**** Configure the master mode ****/
   TIM_MasterConfigTypeDef sMasterConfig{TIM_TRGO_RESET,
@@ -197,10 +198,19 @@ void PWMDriver::start() {
   __HAL_TIM_ENABLE(&pwm_tim);
 }
 
+void PWMDriver::do_stop() {
+  if (/*!retract*/ 1) {
+    stepper.stopHard();
+    stepper.disableOutputs();
+    LedController::setBlink(LedController::BLINK_NO);
+  }
+}
+
 AbstractStepDriver &PWMDriver::setEnabled(bool enable) {
   if (enable) {
     stepper.setAcceleration(acceleration);
     start();
+    retract = false;
   } else {
     stop();
   }
@@ -218,11 +228,10 @@ void PWMDriver::process() {
 
         stepper.setMaxSpeed(dest_speed < MIN_SPEED ? MIN_SPEED : dest_speed);
         stepper.enableOutputs();
-        stepper.moveFree(FreeRunningAccelStepper::DIRECTION_CW);
+        stepper.moveFree(FreeRunningAccelStepper::DIRECTION_CCW);
+        retract = true;
       } else {
-        stepper.stopHard();
-        stepper.disableOutputs();
-        LedController::setBlink(LedController::BLINK_NO);
+        do_stop();
       }
     }
   }
