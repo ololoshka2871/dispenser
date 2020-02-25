@@ -26,6 +26,9 @@ set(SOURCE_FILES
 
     StepDriverSelector.h
     StepDriverSelector.cpp
+
+    Retracktor.h
+    Retracktor.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})

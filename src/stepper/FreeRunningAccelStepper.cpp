@@ -20,7 +20,7 @@ void FreeRunningAccelStepper::moveFree(Direction dir) {
   if (Minimal_steps_to_stop > stepsToStop) {
     stepsToStop = Minimal_steps_to_stop;
   }
-  move(dir == DIRECTION_CW ? stepsToStop * 2 : -stepsToStop * 2);
+  move(destApplyDir(dir, stepsToStop * 2));
   free_run = true;
 }
 
@@ -39,7 +39,7 @@ void FreeRunningAccelStepper::stopHard() {
 }
 
 void FreeRunningAccelStepper::run() {
-  auto running = AccelStepper::run();
+  running = AccelStepper::run();
   if (running && free_run) {
     _targetPos =
         _currentPos + ((_currentPos < _targetPos) ? stepsToStop : -stepsToStop);
@@ -59,4 +59,11 @@ void FreeRunningAccelStepper::doStep(Direction dir) {
   step(_currentPos);
 
   _lastStepTime = UsTimer::Instance().read_us();
+}
+
+bool FreeRunningAccelStepper::isRunning() const { return running || free_run; }
+
+float FreeRunningAccelStepper::destApplyDir(AccelStepper::Direction dir,
+                                            float to_go) {
+  return dir == DIRECTION_CW ? to_go : -to_go;
 }

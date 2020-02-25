@@ -52,7 +52,7 @@ extern "C" int main(void) {
   stepper.setAcceleration(3000);
 
   ManualDriver::begin(stepper, DEFAULT_SPEED, 250);
-  PWMDriver::begin(stepper, exti_mgr, DEFAULT_SPEED, 3000);
+  PWMDriver::begin(stepper, exti_mgr, DEFAULT_SPEED, 3000, DEFAULT_SPEED / 2);
   StepDirDriver::begin(stepper, exti_mgr, false);
 
   auto &pwmDriver = PWMDriver::instance();

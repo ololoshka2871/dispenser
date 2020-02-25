@@ -18,9 +18,14 @@ struct FreeRunningAccelStepper : public AccelStepper {
 
   void doStep(Direction dir);
 
+  bool isRunning() const;
+
+  static float destApplyDir(Direction dir, float to_go);
+
 private:
   long stepsToStop;
   bool free_run;
+  bool running;
 };
 
 #endif /* _FREE_RUNNING_ACCELSTEPPER_H_ */

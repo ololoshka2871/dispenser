@@ -3,6 +3,8 @@
 
 #include "LedController.h"
 
+#include "Retracktor.h"
+
 #include "FreeRunningAccelStepper.h"
 
 #include "PWMDriver.h"
@@ -86,21 +88,24 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
 void PWMDriver::begin(FreeRunningAccelStepper &stepper,
                       EXTI_manager_base &exti_manager, float max_speed,
-                      float acceleration) {
+                      float acceleration, uint16_t retract_distance) {
   if (inst) {
     delete inst;
   }
-  inst = new PWMDriver{stepper, exti_manager, max_speed, acceleration};
+  inst = new PWMDriver{stepper, exti_manager, max_speed, acceleration,
+                       retract_distance};
 }
 
 PWMDriver &PWMDriver::instance() { return *inst; }
 
 PWMDriver::PWMDriver(FreeRunningAccelStepper &stepper,
                      EXTI_manager_base &exti_manager, float max_speed,
-                     float acceleration)
+                     float acceleration, uint16_t retract_distance)
     : AbstractStepDriver{stepper}, exti_manager{exti_manager},
-      cycle_ready{false}, max_speed{max_speed},
-      acceleration{acceleration}, retract{false} {
+      cycle_ready{false}, max_speed{max_speed}, acceleration{acceleration},
+      retracktor{std::make_unique<Retracktor>(
+          stepper, retract_distance, max_speed,
+          FreeRunningAccelStepper::DIRECTION_CCW)} {
   PWM_timer_clocking();
 
   // input pin
@@ -205,19 +210,19 @@ void PWMDriver::start() {
   __HAL_TIM_ENABLE(&pwm_tim);
 }
 
-void PWMDriver::do_stop() {
-  if (/*!retract*/ 1) {
-    stepper.stopHard();
-    stepper.disableOutputs();
-    LedController::setBlink(LedController::BLINK_NO);
-  }
+float PWMDriver::pwm_designed_speed() const {
+  return max_speed * duration / period;
 }
+
+bool PWMDriver::is_moving() const { return !!period; }
+
+void PWMDriver::do_stop() {}
 
 AbstractStepDriver &PWMDriver::setEnabled(bool enable) {
   if (enable) {
     stepper.setAcceleration(acceleration);
     start();
-    retract = false;
+    retracktor->reset();
   } else {
     stop();
   }
@@ -229,17 +234,18 @@ void PWMDriver::process() {
     // do calculations, update stepper settings
     cycle_ready = false;
     if (enabled) {
-      if (period) {
+      if (is_moving()) {
         LedController::setBlink(LedController::BLINK_FAST);
-        float dest_speed = max_speed * duration / period;
+        float dest_speed = pwm_designed_speed();
 
-        stepper.setMaxSpeed(dest_speed < MIN_SPEED ? MIN_SPEED : dest_speed);
-        stepper.enableOutputs();
-        stepper.moveFree(FreeRunningAccelStepper::DIRECTION_CCW);
-        retract = true;
+        retracktor->setWorkSpeed(dest_speed < MIN_SPEED ? MIN_SPEED
+                                                        : dest_speed);
+        retracktor->doStartSerqunce();
       } else {
-        do_stop();
+        retracktor->doStopSequence();
+        LedController::setBlink(LedController::BLINK_NO);
       }
+      retracktor->process();
     }
   }
 }

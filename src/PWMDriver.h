@@ -3,10 +3,12 @@
 
 #include <cstdint>
 #include <functional>
+#include <memory>
 
 #include "AbstractStepDriver.h"
 
 struct EXTI_manager_base;
+struct Retracktor;
 
 #ifndef __STM32F0xx_HAL_GPIO_H
 struct GPIO_InitTypeDef;
@@ -15,7 +17,7 @@ struct GPIO_InitTypeDef;
 struct PWMDriver : AbstractStepDriver {
   static void begin(FreeRunningAccelStepper &stepper,
                     EXTI_manager_base &exti_manager, float max_speed,
-                    float acceleration);
+                    float acceleration, uint16_t retract_distance = 0);
   static PWMDriver &instance();
 
   PWMDriver(const PWMDriver &) = delete;
@@ -41,14 +43,17 @@ private:
   float max_speed;
   float acceleration;
 
-  bool retract;
+  std::unique_ptr<Retracktor> retracktor;
 
   PWMDriver(FreeRunningAccelStepper &stepper, EXTI_manager_base &exti_manager,
-            float max_speed, float acceleration);
+            float max_speed, float acceleration, uint16_t retract_distance);
 
   void stop();
 
   void start();
+
+  float pwm_designed_speed() const;
+  bool is_moving() const;
 
   void do_stop();
 };
