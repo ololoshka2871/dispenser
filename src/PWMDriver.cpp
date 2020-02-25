@@ -119,7 +119,14 @@ PWMDriver::PWMDriver(FreeRunningAccelStepper &stepper,
   TIM_SlaveConfigTypeDef sSlaveConfig{TIM_SLAVEMODE_RESET, TIM_TS_TI1FP1,
                                       TIM_TRIGGERPOLARITY_FALLING,
                                       TIM_TRIGGERPRESCALER_DIV1, 0};
-  assert(HAL_TIM_SlaveConfigSynchro(&pwm_tim, &sSlaveConfig) == HAL_OK);
+  assert(
+#if __STM32F0_DEVICE_VERSION_MAIN == 2 &&                                      \
+    __STM32F0_DEVICE_VERSION_SUB1 == 3 && __STM32F0_DEVICE_VERSION_SUB2 == 3
+      HAL_TIM_SlaveConfigSynchronization
+#else
+      HAL_TIM_SlaveConfigSynchro
+#endif
+      (&pwm_tim, &sSlaveConfig) == HAL_OK);
 
   /**** Configure the master mode ****/
   TIM_MasterConfigTypeDef sMasterConfig{TIM_TRGO_RESET,
