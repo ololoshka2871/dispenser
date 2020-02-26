@@ -1,0 +1,8 @@
+[package]
+name = "rustlib"
+version = "0.1.0"
+
+[lib]
+name = "rustlib"
+crate-type = ["staticlib"]
+path = "rustlib.rs"

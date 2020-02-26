@@ -5,6 +5,9 @@ project(dispenser C CXX ASM)
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 
+enable_language(Rust)
+include(CMakeCargo)
+
 set(STM32_FAMILY F0)
 set(STM32_FAMILY_LONG STM32F0)
 set(STM32_FAMILY_LONG_lx stm32f0xx)
