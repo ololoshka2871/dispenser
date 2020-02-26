@@ -6,3 +6,7 @@ version = "0.1.0"
 name = "rustlib"
 crate-type = ["staticlib"]
 path = "rustlib.rs"
+
+[dependencies.stm32f0]
+version = "0.10.0"
+features = ["stm32f0x2", "rt"]

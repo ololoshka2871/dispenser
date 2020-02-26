@@ -1,5 +1,9 @@
 #![no_std]
 
+extern crate stm32f0;
+
+use stm32f0::stm32f0x2;
+
 use core::panic::PanicInfo;
 
 #[no_mangle]
