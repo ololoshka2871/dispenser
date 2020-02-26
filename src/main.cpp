@@ -11,7 +11,7 @@
 
 #include "BoardInit.h"
 
-#include "rust_header.h"
+#include "rustlib.h"
 
 #include <iterator>
 
@@ -22,7 +22,7 @@ define_EXTI_manager(4_15_IRQ);
 extern "C" int main(void) {
   InitBoard();
 
-  rust_fun(1);
+  rust_ffi::rust_fun(1);
 
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();

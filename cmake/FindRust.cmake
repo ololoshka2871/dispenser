@@ -56,6 +56,12 @@ find_program(RUSTUP_EXECUTABLE rustup
 	PATH_SUFFIXES "bin")
 mark_as_advanced(RUSTUP_EXECUTABLE)
 
+# Find cbindgen executable
+find_program(CBINDGEN_EXECUTABLE cbindgen
+        HINTS "${CARGO_PREFIX}"
+        PATH_SUFFIXES "bin")
+mark_as_advanced(CBINDGEN_EXECUTABLE)
+
 set(RUST_FOUND FALSE CACHE INTERNAL "")
 
 if(CARGO_EXECUTABLE AND RUSTC_EXECUTABLE AND RUSTDOC_EXECUTABLE)

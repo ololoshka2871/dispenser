@@ -41,6 +41,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
     -Wl,--no-whole-archive
     ws2812b
     stepper
+    rustlib-interface
     rustlib
 )
 

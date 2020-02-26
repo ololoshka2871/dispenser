@@ -71,3 +71,39 @@ function(cargo_build)
     add_dependencies(${CARGO_NAME} ${CARGO_NAME}_target)
     set_target_properties(${CARGO_NAME} PROPERTIES IMPORTED_LOCATION ${LIB_FILE})
 endfunction()
+
+function(cargo_bindings TARGET_NAME)
+    cmake_parse_arguments(BINDINGS "" "FILENAME;NAMESPACE;CRATE;SOURCE_DIR" "" ${ARGN})
+
+    message(STATUS "Generate rust c++ bundings:\n"
+    "\tOutfile: ${BINDINGS_FILENAME}\n"
+    "\tCrate: ${BINDINGS_CRATE}\n"
+    "\tNamespace: ${BINDINGS_NAMESPACE}\n"
+    "\tSource path: ${BINDINGS_SOURCE_DIR}")
+
+    get_filename_component(INCLUDE_PATH ${BINDINGS_FILENAME} DIRECTORY)
+
+    set(CBINGENT_TOML cbingen.toml)
+    set(TOMLS ${CBINGENT_TOML} Cargo.toml)
+
+    set(ARGS
+        --config ${CBINGENT_TOML}
+        --crate ${BINDINGS_CRATE}
+        --output ${BINDINGS_FILENAME}
+    )
+
+    file(GLOB_RECURSE LIB_SOURCES "*.rs")
+    list(APPEND LIB_SOURCES ${TOMLS})
+
+    add_custom_command(
+        OUTPUT ${BINDINGS_FILENAME}
+        COMMAND ${CBINDGEN_EXECUTABLE} ARGS ${ARGS}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        DEPENDS ${LIB_SOURCES}
+        COMMENT "Running ${CBINDGEN_EXECUTABLE}"
+    )
+    add_custom_target(${BINDINGS_CRATE}_binding_target ALL DEPENDS ${BINDINGS_FILENAME})
+    add_library(${TARGET_NAME} INTERFACE)
+    add_dependencies(${TARGET_NAME} ${BINDINGS_CRATE}_binding_target)
+    target_include_directories(${TARGET_NAME} INTERFACE ${INCLUDE_PATH})
+endfunction()
