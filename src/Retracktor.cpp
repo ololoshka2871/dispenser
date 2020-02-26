@@ -16,7 +16,7 @@ void Retracktor::doStartSerqunce() {
   stepper.enableOutputs();
 
   if (state == READY) {
-    stepper.moveFree(FreeRunningAccelStepper::DIRECTION_CCW);
+    stepper.moveFree(direction);
     state = WORKING;
   } else {
     stepper.setSpeed(retract_speed);
@@ -30,8 +30,8 @@ void Retracktor::doStopSequence() {
   case PREPARING:
     // stop and return to retrakt point
     {
-      auto to_go = stepper.distanceToGo();
-      stepper.move(-to_go);
+      auto to_go = retract_distance - labs(stepper.distanceToGo()); // forward
+      stepper.move(FreeRunningAccelStepper::destApplyDir(direction, -to_go));
       state = RETRAKTING;
     }
     break;

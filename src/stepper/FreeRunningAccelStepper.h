@@ -22,6 +22,8 @@ struct FreeRunningAccelStepper : public AccelStepper {
 
   static float destApplyDir(Direction dir, float to_go);
 
+  void move(long relative);
+
 private:
   long stepsToStop;
   bool free_run;

@@ -22,6 +22,7 @@ void FreeRunningAccelStepper::moveFree(Direction dir) {
   }
   move(destApplyDir(dir, stepsToStop * 2));
   free_run = true;
+  running = true;
 }
 
 void FreeRunningAccelStepper::stop() {
@@ -61,9 +62,14 @@ void FreeRunningAccelStepper::doStep(Direction dir) {
   _lastStepTime = UsTimer::Instance().read_us();
 }
 
-bool FreeRunningAccelStepper::isRunning() const { return running || free_run; }
+bool FreeRunningAccelStepper::isRunning() const { return running; }
 
 float FreeRunningAccelStepper::destApplyDir(AccelStepper::Direction dir,
                                             float to_go) {
   return dir == DIRECTION_CW ? to_go : -to_go;
+}
+
+void FreeRunningAccelStepper::move(long relative) {
+  running = true;
+  AccelStepper::move(relative);
 }
