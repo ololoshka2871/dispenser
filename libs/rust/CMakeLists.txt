@@ -13,7 +13,6 @@ cargo_bindings(rustlib-interface
 add_custom_target(fake_rust_src
     SOURCES
         rustlib.rs
-        rust_header.h
         Cargo.toml
         cbingen.toml
 )
