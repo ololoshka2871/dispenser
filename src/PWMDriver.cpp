@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include <stm32f0xx_hal.h>
 #include <stm32f0xx_hal_tim_ex.h>
 
@@ -238,14 +240,17 @@ void PWMDriver::process() {
         LedController::setBlink(LedController::BLINK_FAST);
         float dest_speed = pwm_designed_speed();
 
-        retracktor->setWorkSpeed(dest_speed < MIN_SPEED ? MIN_SPEED
-                                                        : dest_speed);
+        retracktor->setWorkSpeed(
+            dest_speed < MIN_SPEED || std::isnan(dest_speed) ? MIN_SPEED
+                                                             : dest_speed);
         retracktor->doStartSerqunce();
       } else {
         retracktor->doStopSequence();
         LedController::setBlink(LedController::BLINK_NO);
       }
-      retracktor->process();
     }
+  }
+  if (enabled) {
+    retracktor->process();
   }
 }

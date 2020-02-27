@@ -13,15 +13,22 @@ void Retracktor::reset() {
 }
 
 void Retracktor::doStartSerqunce() {
-  stepper.enableOutputs();
-
-  if (state == READY) {
+  switch (state) {
+  case READY:
+    stepper.enableOutputs();
+    stepper.setMaxSpeed(workingSpeed);
     stepper.moveFree(direction);
     state = WORKING;
-  } else {
+    break;
+  case RETRAKTED:
+    stepper.enableOutputs();
     stepper.setSpeed(retract_speed);
-    stepper.move(retract_distance);
+    stepper.move(
+        FreeRunningAccelStepper::destApplyDir(direction, retract_distance));
     state = PREPARING;
+    break;
+  default:
+    break;
   }
 }
 
